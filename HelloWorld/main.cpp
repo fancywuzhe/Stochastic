@@ -1,1 +1,2 @@
-my name is wjj
+my name is wj
+i have a new name
