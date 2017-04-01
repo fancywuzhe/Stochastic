@@ -1,15 +1,15 @@
-//
-//  main.cpp
-//  HelloWorld
-//
-//  Created by fancy on 15/5/31.
-//  Copyright (c) 2015年 fancy. All rights reserved.
-//
 
 #include <iostream>
 
-int main(int argc, const char * argv[]) {
-    // insert code here...
-    std::cout << "Hello, World!\n";
-    return 0;
+#include <cmath>
+#include "Person.h"
+#include <fstream>
+//show the basic io frome file
+int main(){
+    Time a=Time(2,30);
+    Time b=Time(3,40);
+    Time c=a.Sum(b);
+    a.Show();
+    
+
 }
