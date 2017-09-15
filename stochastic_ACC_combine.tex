@@ -1,0 +1,944 @@
+\documentclass[letterpaper, 10pt, conference]{ieeeconf}
+% ==========================================================================================
+% Packages
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{array}
+\usepackage{booktabs}
+% Theorem Package
+\newtheorem{thm}{Theorem}
+\newtheorem{prop}{Proposition}
+\newtheorem{rmk}{Remark}
+\newtheorem{asm}{Assumption}
+\newtheorem{definition}{Definition}
+\newcommand{\Rset}{{\rm I}\!{\rm R}}
+
+\IEEEoverridecommandlockouts
+\overrideIEEEmargins
+\allowdisplaybreaks
+% ==========================================================================================
+
+\title{\textbf{Lyapunov-based economic model predictive control of stochastic nonlinear systems}}
+\author{\small{Zhe Wu}, Junfeng Zhang, Zhihao Zhang, Fahad Albalawi, Helen Durand, Maaz Mahmood, Prashant Mhaskar,\\ Panagiotis D. Christofides
+	\thanks{Zhe Wu, Junfeng Zhang, and Zhihao Zhang are with the Department of Chemical and Biomolecular Engineering, University of California, Los Angeles, CA 90095-1592, USA. Fahad Albalawi is with the Department of Electrical Engineering, Taif University, Taif, 21974, Saudi Arabia. Helen Durand is with the Department of Chemical Engineering and Materials Science, Wayne State University, Detroit, MI 48202, USA. Maaz Mahmood and Prashant Mhaskar are with the Department of Chemical Engineering, McMaster University, Hamilton, ON L8S 4L7, Canada. Panagiotis D. Christofides is with the Department of Chemical and Biomolecular Engineering and the Department of Electrical Engineering, University of California, Los Angeles, CA 90095-1592, USA. Emails: {\tt\small wuzhe@g.ucla.edu, pdc@seas.ucla.edu}. Corresponding author: P. D. Christofides. Financial support from the National Science Foundation is gratefully acknowledged.}}
+
+
+\bibliographystyle{plain}
+\begin{document}
+	
+	\maketitle
+	
+	\begin{abstract}
+	This work focuses on the design of stochastic Lyapunov-based economic model predictive control (SLEMPC) systems for a broad class of stochastic
+	nonlinear systems with input constraints. Under the assumption of stabilizability of the origin of the stochastic nonlinear system via a stochastic Lyapunov-based control law, an
+	economic model predictive controller is proposed that utilizes suitable constraints based on the stochastic Lyapunov-based controller to ensure economic optimality, feasibility and stability in probability in a well-characterized region of the state-space surrounding the origin. A chemical process example is used to illustrate the application of the approach and demonstrate
+	its economic benefits with respect to an existing robust EMPC scheme that treats the disturbances in a deterministic, bounded manner.
+	%	In this paper, the stochastic control problem is investigated for a class of nonlinear systems. We develop a novel stochastic Lyapunov-based economic model predictive control (SLEMPC) method based on the dynamic process optimization and control Lyapunov function. It takes both process economics and stochastic uncertainties into full consideration, thus can achieve favorable performance. Besides, a comprehensive analysis of its feasibility and stability is also given in the sense of probability. Finally, an example of continuous stirred tank reactor (CSTR) is provided to demonstrate the effectiveness and applicability of our proposed method.
+	\end{abstract}
+	
+	% ==========================================================================================
+	
+	\section{Introduction}
+	While tracking model predictive control, in which the cost function has
+	its minimum at the steady-state (typically taken to be
+	the origin), has been extensively researched and practiced in industry
+	(see, for example, the review papers \cite{Garcia1989335, Mayne2000789,
+		Qin2003733}) since the mid 70s, economic model predictive
+	control (EMPC), in which the cost function does not have in general its
+	minimum at the steady-state and penalizes directly process
+	economics, has been a relatively recent development (over the last decade)
+	and continues to pose challenging control problems.
+	Part of the appeal of EMPC is that it provides a direct way for
+	integrating in a single layer the process economic optimization layer
+	(responsible for calculating economically optimal operating steady-states)
+	and the process feedback layer (where tracking MPC is typically
+	employed), thereby providing a way to directly optimize process economics
+	by allowing for dynamic (off steady-state) feedback control-based
+	operating policies. This allows for the opportunity to shift chemical
+	manufacturing operations from steady-state operation to dynamic operation
+	to optimize the process economic performance and thus, effectively
+	combining dynamic economic process optimization and feedback control into
+	one layer. Working within this new EMPC paradigm, several economic MPC
+	(EMPC) schemes have been proposed (e.g.,~\cite{Amrit2011178, Diehl2011703,
+		Huang2011501, Angeli20121615, Heidarinejad2012855, Rawlings20123851}).
+	
+	
+	One important issue that requires further study is the handling of
+	process model uncertainty within EMPC. One way to address this
+	problem is assume that the uncertain process variables are bounded,
+	utilize a nominal process model within EMPC and then establish robustness
+	of the EMPC with respect to the worst-case values (typically the bounds)
+	of the uncertain variables such that the state of the closed-loop
+	system stays within a well-characterized region of the state-space as
+	long as the uncertain variables are within their bounds
+	\cite{Heidarinejad2012855}. This robustness treatment of the uncertain
+	variables is particularly useful when no information is provided
+	for the uncertain variables other than the bounds. An alternative way to
+	handle process model uncertainty within EMPC is to model the
+	disturbances in a probabilistic manner and consider EMPC of stochastic
+	nonlinear systems with the goal of deriving closed-loop stability results
+	in
+	probability taking advantage of the probability distribution of the
+	uncertain variables and targeting less conservative results for
+	closed-loop
+	operation regions. MPC of stochastic nonlinear systems has received some
+	attention recently:
+	In \cite{van2006stochastic}, an MPC method was developed for nonlinear
+	systems with stochastic disturbances, which simultaneously optimizes
+	feedforward trajectory and feedback controller for constraint pushing and
+	back-off minimizing. The works
+	\cite{visintini2006monte,maciejowski2007nmpc} utilize the Markov-chain
+	Monte Carlo technique to solve constrained stochastic optimization
+	problems to guarantee the convergence to a near-optimal solution in a
+	probabilistic sense. In \cite{mahmood2012lyapunov}, a Lyapunov-based model
+	predictive control (LMPC) method was proposed for stochastic nonlinear
+	systems, which guarantees probabilistic stability and feasibility from an
+	explicitly characterized region of attraction. At this stage, even though
+	the EMPC problem has attracted considerable research interest, the EMPC
+	problem for nonlinear stochastic systems   has not yet been adequately
+	investigated.
+	
+	
+	Motivated by these considerations,  this work focuses on the design of
+	stochastic Lyapunov-based economic model
+	predictive control (SLEMPC) systems for a broad class of
+	stochastic nonlinear systems with input constraints. Under the assumption
+	of stabilizability of the origin of the stochastic nonlinear system via a
+	stochastic Lyapunov-based control law, an economic model predictive
+	controller is proposed that utilizes suitable constraints based on the
+	stochastic Lyapunov-based controller to ensure economic optimality,
+	feasibility and stability in probability in a well-characterized region of
+	the state-space surrounding the origin. A chemical process example is used
+	to illustrate the application of the approach and demonstrate its economic
+	benefits with respect to an existing robust EMPC scheme that treats the
+	disturbances in a deterministic, bounded manner.
+%	With the increasing complexity of modern engineering systems, the model predictive control (MPC) has attracted considerable research attention in the past decades [1]-[7].
+%	%\cite{lee2011model,muller2012model,christofides2013distributed,diangelakis2015decentralized,charitopoulos2016explicit,heirung2017dual,hashimoto2017self}. 
+%	The main idea of MPC is to transform the controller design problem into a constrained optimization problem and then solve it repeatedly in a receding-horizon manner. It is an admittedly powerful method for controlling complex dynamic systems characterized by constraints and nonlinearities [8]-[10].%\cite{manenti2011considerations,kapernick2016nonlinear,alamir2017contraction}.
+%	
+%	In practice, model uncertainties are inevitable due to the existence of unmodeled dynamics, parameter perturbations, external disturbances, etc. As a consequence, it is of vital importance to investigate the problem of stochastic model predictive control (SMPC) [11]. %\cite{mesbah2016stochastic}.
+%	Up to now, there have already been some results reported on SMPC and they can be roughly classified into two general categories whose main differences lie in the assumptions on uncertainties. One approach is to assume that the uncertainties are in a bounded set and attenuate the largest sequence of uncertainties [12]-[17]. %\cite{bemporad1999robust,rubagotti2011robust,aumi2011robust,rakovic2013equi,yan2014robust,lorenzen2017constraint}. 
+%	Another approach is to identify the probabilistic nature of uncertainties and achieve a desired control objective in a probabilistic sense [18]-[23]. %\cite{cannon2009probabilistic,cannon2011stochastic,kim2013generalised,farina2015approach,bayer2016robust,paulson2017stochastic}.
+%	
+%	Meanwhile, the economic model predictive control (EMPC) has stirred enhanced and wide-spread interest in recent years [24]-[34]. %\cite{ellis2014tutorial,muller2015necessity,alanqar2015economic,olanrewaju2016economic,muller2016economic,durand2016economic,sokoler2016homogeneous,rashid2017handling,ferramosca2017offset,albalawi2017distributed,olanrewaju2017implications}. 
+%	It takes not only control performance but also process economics into full consideration, thus can dynamically regulate the process to increase economic efficiency. The EMPC has demonstrated great success in a variety of applications and become a promising topic in both academia and industry [35]-[37]. %\cite{rashid2016multi,bo2017dynamic,broomhead2017economic}.
+%	
+%	Summarizing the above discussion, it can be concluded that although the EMPC probem has attracted some research interests, the corresponding SLEMPC problem for nonlinear systems with unbounded uncertainties has not yet been adequately investigated. It is due probably to difficulties in simultaneously processing economics, nonlinearities, and uncertainties. Moreover, the stochastic unbounded characteristic of uncertainties adds substantial challenge to controller design and analysis, especially when the economic benefits are required to be maximized iteratively. This leads to the first motivation for our present study.
+%	
+%	%What is more, for the previous LEMPC work, they usually defined the stable region as $\phi_u'=\{ x \in \mathbf{R}^n | \inf_{ u \in U } \dot{V}(x) \leq 0, \}$, where $V$ is a Lyapunov function. The invariant set $\Omega_\rho$ inside the set $\phi_u'$ guarantees that given any initial states $\{x(0) \in \mathbf{R}^n | x(0) \in \Omega_\rho\}$, the states will remain in $\Omega_\rho$, $\forall t \geq t_0$, which also implies the asymptotic stability of constrained closed-loop systems. Due to the potential disturbance, a smaller safe region $\Omega_{\rho_e}$ is thus defined to be used as the constraint in EMPC formulation. Consequently, under the worst case (i.e. the maximum bound of disturbance), the trajectory $x(t)$ starting at the boundary of $\Omega_{\rho_e}$ will not leave $\Omega_{\rho}$ during one sampling time, and will be pulled back towards origin in the next sampling time with the contractive constraint. Therefore, the set $\Omega_{\rho_e}$ becomes a definitely stable region with bounded disturbance.
+%	
+%	What is more, for the previous work, it is assumed that the disturbance is bounded such that a conservative operating region can be founded where the closed-loop states of the system are guaranteed to be bounded in this region under the Lyapunov-based EMPC (LEMPC). However, the conservative operating region will give rise to the loss of economical benefits (i.e. object function in LEMPC). Also, it is possible that in practice, there are not upper or lower bounds for disturbance to calculate the conservative operating region under the worst case. As a result, we are motivated to develop a new method to give out more economical benefits with some probability. The main contributions of this paper can be highlighted as follows: {\it 1) a novel SLEMPC method is proposed for nonlinear systems which greatly increases economic efficiency; 2) a theoretical analysis of feasibility and stability is given which ensures control performance in a probabilistic sense.}
+%	
+%	The remainder of this paper is organized as follows. In Section 2, the stochastic control problem is formulated with some assumptions. In Section 3, the SLEMPC method is proposed based on the dynamic process optimization and control Lyapunov function. Then, the corresponding feasibility and stability are analyzed in details. Next, simulation results are presented and discussed in Section 4. At last, conclusions are provided in Section 5.
+	
+	\section{Preliminaries}
+	\subsection{Notations}
+	Throughout the paper, $(\Omega, \mathcal{F}, \mathbf{P})$ denotes a probability space, where $\Omega$ is the set of all possible outcomes, $\mathcal{F}$ is the set of the combinations of events, and $\mathbf{P}$ is the probability measure function of the events. Consider a stochastic process $x(t,w) : [0, ~\infty) \times \Omega \rightarrow  \mathbf{R}$ on $(\Omega, \mathcal{F}, \mathbf{P})$. For each $w \in \Omega$, $x(t,\cdot)$ is a realization or trajectory of the stochastic process. Given an event $A$, $\mathbf{E}(A)$, $\mathbf{P}(A)$, $\mathbf{E}(A ~|~ \cdot )$ and $\mathbf{P}(A ~|~ \cdot)$ are the expectation, the probability, the conditional expectation, and the conditional probability of the occurrence of $A$, respectively. The hitting time (or first hit time) $\tau_X$ of a set $X$ is defined as the first time that the state trajectory hits the boundary of $X$. Based on this, we also define $\tau_{X,T}(t)=\min\{ \tau_X,T,t\}$, where $T$ is the operation time. The notation $\left\vert \cdot \right\vert$ is used to denote the Euclidean norm of a vector, the notation $\left\vert \cdot \right\vert_{Q}$ denotes the weighted Euclidean norm of a vector (i.e., $\left\vert x \right\vert_Q = x^T Q x$ where $Q$ is a positive definite matrix). $x^T$ denotes the transpose of $x$. The notation $L_fV(x)$ denotes the standard Lie derivative $L_fV(x) :=\frac{\partial V(x)}{\partial x}f(x)$. Given a set $\mathcal{D}$, we denote the boundary of $\mathcal{D}$ by $\partial \mathcal{D}$, the closure of $\mathcal{D}$ by $\overline{\mathcal{D}}$, and the interior of $\mathcal{D}$ by $\mathcal{D}^{\text{o}}$. For given positive real numbers $\delta$ and $\epsilon$, $\mathcal{B}_{\delta}(\epsilon) := \{x ~|~ \vert x-\epsilon \vert < \delta \}$ is an open ball around $\epsilon$ with radius of $\delta$. Set subtraction is denoted by "$\backslash$", i.e., $A \backslash B := \{x \in \mathbf{R}: x \in A, x \notin B \}$. A continuous function $\alpha : [0,a)\rightarrow [0,\infty )$ is said to be a class $\mathcal {K}$ function if $r(0)=0$ and it is strictly increasing.	The function $f(x)$ is said to be class $C^k$ function if the $i_{th}$($i=1,2,..,k$) derivative of $f$ exists for all $i$ and it is a continuous function of $x$. %We also assume the measurements of $x(t)$ are available at any time for the design of feedback controller.
+	
+	\subsection{Class of Systems}
+	Consider a class of continuous-time stochastic nonlinear systems described by the following stochastic differential equations:
+	\begin{equation}
+	\label{eq:nonlin_sys}
+	d{x} = f(x(t))dt+g(x(t))u(t)dt +h(x(t))dw(t)
+	\end{equation}
+	%\begin{equation}
+	%\label{eq:CLBF:u_constraint}
+	%u \in U
+	%\end{equation}
+	where $x \in \mathbf{R}^n$ is the state vector and $u \in \mathbf{R}^m$ is the input vector. The available control action is defined by $U = \{u_{\min} \leq u \leq u_{\max}\} \subset \mathbf{R}^m$. The disturbance $w(t)$ is a standard q-dimensional independent Wiener process defined on the probability space $(\Omega, \mathcal{F}, \mathbf{P})$. $f(\cdot)$, $g(\cdot)$, $h(\cdot)$ are sufficiently smooth vector and matrix functions of dimensions $n \times 1$, $n \times m$, $n \times q$, respectively. For the sake of brevity, it is assumed that the steady-state of the system with $w(t) \equiv 0$ is $(x_s^*, u_s^*)=(0,0)$, and the initial time $t_0$ is taken to be zero ($t_0 = 0$). In Eq.~\ref{eq:nonlin_sys}, $f(x(t))+g(x(t))u(t)$ is the deterministic drift, and $h(x(t))$ is the diffusion matrix. We also assume that the disturbance term vanishes at the initial time (i.e., $h(x(0))=0$), such that $(0, 0)$ is an equilibrium point for Eq.~\ref{eq:nonlin_sys}.
+	
+	\begin{definition}
+		Given a $C^2$ Lyapunov function $V : \mathbf{R}^n \rightarrow \mathbf{R}$, the infinitesimal generator (denoted by the operator $\mathcal{L}$) of the system of Eq.~\ref{eq:nonlin_sys} is defined as follows:
+	\end{definition}
+	\begin{equation}\label{eq:generator}
+	\begin{split}
+	\mathcal{L}V(x,u)=&L_fV(x)+L_gV(x)u\\
+	&+\frac{1}{2} Tr\{h(x)^T\frac{\partial^2 V}{\partial x^2}h(x)\}
+	\end{split}
+	\end{equation}
+Throughout the work, we assume that $L_fV(x)$, $L_gV(x)$, $h(x(t))^T \frac{\partial^2V(x(t))}{\partial x(t)^2}h(x(t))$ are locally Lipschitz.
+
+\vspace{0.3cm}
+
+	\begin{definition} \cite{khasminskii2011stochastic}
+		Assuming that the equilibrium of the system of Eq.~\ref{eq:nonlin_sys} is at the origin, the origin is said to be globally asymptotically stable in probability, if for any $\epsilon > 0$, the following conditions hold:
+		\begin{subequations}
+			\label{eq:stochastic_stable}
+			\begin{equation}\label{eq:stochastic_stable1}
+			\mathbf{P}(\lim_{t \to \infty} x(t)=0)=1
+			\end{equation}
+			\begin{equation}\label{eq:stochastic_stable2}
+			\lim \limits_{x(0) \rightarrow 0} \mathbf{P}(\sup_{t > 0} \vert x(t) \vert > \epsilon)=0
+			\end{equation}
+		\end{subequations}
+	\end{definition}
+	
+	\vspace{0.3cm}
+	
+	\begin{prop} (Dynkin's Formula) \cite{pinsky1987stochastic}
+		Assuming $x(0) \in \mathcal{Z} \subset \mathbf{R}^n$, $T>0$, and the solution of Eq.~\ref{eq:nonlin_sys} exists for all time, then it satisfies the following condition for $t \in [0,\tau_{\mathcal{Z}, T}(t)]$:
+		\begin{equation}\label{dynkin}
+		\begin{split}
+		&\mathbf{E}(V(x(\tau_{\mathcal{Z}, T}(t))\}-V(x(0))\\
+		&=\mathbf{E}(\int_{0}^{\tau_{\mathcal{Z}, T}(t)} \mathcal{L}V(x(s))ds)
+		\end{split}
+		\end{equation}	
+	\end{prop}
+	
+		\vspace{0.3cm}
+	
+	\begin{prop}\cite{khasminskii2011stochastic}
+		Given the system of Eq.~\ref{eq:nonlin_sys}, if for all $x \in \mathbf{R}^n$, $\mathcal{L}V <0$ holds, then $\mathbf{E}(V(x(t))) < V(x(0))$, $ t \in (0, \infty)$ is satisfied and the origin of the system Eq.~\ref{eq:nonlin_sys} is globally asymptotically stable in probability.
+	\end{prop}
+
+	
+	\subsection{Stabilizability Assumptions}
+	For the system of Eq.~\ref{eq:nonlin_sys}, the following assumption of the stochastic feedback control law is made.
+	%\begin{asm}
+	%	There exists a stabilizing feedback control law $u=\Phi_n(x) \in U$ such that the origin of the nominal system of Eq.~\ref{eq:nonlin_sys} ($w(t) \equiv 0$) can be rendered asymptotically stable for all $x \in D \subset \mathbf{R}^n$, where $D$ is an open neighborhood of the origin, if it satisfies the following inequality:
+	%	\begin{equation}\label{lfv}
+	%	\dot{V}=	L_fV(x)+L_gV(x)u \leq - \alpha_1(\vert x \vert)
+	%	\end{equation}
+	%where $\alpha_1(\cdot)$ is a class $\mathcal{K}$ function. An example of a feedback control law that renders the origin asymptotically stable is the Sontag control law~\cite{}. Based on the Lyapunov-based controller $\Phi_n(x)$, the null controllable region for the nominal system of Eq.~\ref{eq:nonlin_sys} can be characterized as: $\phi_n=\{ x \in \mathbf{R}^n~|~ \inf_{ u \in U } \dot{V} + \kappa V(x) \leq 0, \kappa > 0\} $
+	%\end{asm}
+	\begin{asm}
+		There exists a stochastic stabilizing feedback control law $u=\Phi_s(x) \in U$ such that the origin of the system of Eq.~\ref{eq:nonlin_sys} can be rendered asymptotically stable in probability for all $x \in D \subset \mathbf{R}^n$, where $D$ is an open neighborhood of the origin, in the sense that there exists a positive definite $C^2$ stochastic control Lyapunov function $V$ exists and satisfies the following inequalities:
+		\begin{equation}\label{LV}
+		\begin{split}
+		\mathcal{L}V&=L_fV(x)+L_gV(x)u+\frac{1}{2} Tr\{h^T\frac{\partial^2 V}{\partial x^2}h\}\\
+		&\leq - \alpha_1(\vert x \vert)
+		\end{split}
+		\end{equation}
+		\begin{equation}\label{pos}
+		h(x)^T\frac{\partial^2 V}{\partial x^2}h(x) \geq 0
+		\end{equation}
+		where $\alpha_1(\cdot)$ is a class $\mathcal{K}$ function. 
+		
+		One of the candidate controllers that can render the origin of the stochastic system of Eq.~\ref{eq:nonlin_sys} asymptotically stable in probability is given in\cite{deng2001stabilization}. Based on the controller $\Phi_s(x)$, the null controllable region (NCR) for the system of Eq.~\ref{eq:nonlin_sys} can be characterized as: $\phi_d=\{ x \in \mathbf{R}^n ~|~ \inf_{ u \in U } \mathcal{L}V + \kappa V(x) \leq 0, \kappa > 0\}$. Similarly, we define the NCR for the nominal system ($w(t) \equiv 0$) of Eq.~\ref{eq:nonlin_sys}: $\phi_n=\{ x \in \mathbf{R}^n~|~ \inf_{ u \in U } \dot{V} + \kappa V(x) \leq 0, \kappa > 0\} $. Since it is required by Eq.~\ref{pos} that $V$ has a positive semi-definite Hessian matrix, $\phi_d$ is guaranteed to be more conservative than $\phi_n$ characterized for the nominal system of Eq.~\ref{eq:nonlin_sys} with $w(t) \equiv 0$ (i.e., $\phi_d \subset \phi_n$). Furthermore, if the diffusion term vanishes, the feedback control law that satisfies Eqs.~\ref{LV} and~\ref{pos} is identical to the one for deterministic stabilization problems. (e.g., the usual Sontag control law\cite{lin1991universal}). %Therefore, due to its conservativeness, $\phi_d$ also guarantees that $ \forall x \in \phi_d, \inf_{ u \in U } \dot{V} + \kappa V(x) \leq 0, \kappa > 0$.
+	\end{asm}
+	%then the following stochastic feedback control law $\Phi_s(x)$ from DENG PAPER, which is an extension of Sontag universal control law, is utilized here to enforce $\mathcal{L}V < 0$, which guarantees the stability of the closed-loop system in probability.
+	
+	% $\Phi_n(x)$ is the Lyapunov-based control law applied in the LEMPC of the nominal system of Eq.~\ref{eq:nonlin_sys} to stabilize the system at the origin of state-space, which is shown as follows:
+	
+	%\begin{equation}\label{sontag}
+	%\Phi_i'(x)=\left \{ \begin{array}{lcl}
+	%\ -\frac{L_fV+\sqrt{L_fV^2+\gamma L_{g_i}V^4}}{{(L_{g_i}V)}'}  & \mbox{if} & L_{g_i}V \neq 0 \\  0 & \mbox{if} & L_{g_i}V = 0
+	%\end{array}\right.
+	%\end{equation}
+	
+	%Similar to the null controllable region  under the stochastic Lyapunov-based control law $\Phi_s(x)$, we can find a region $\phi_d$ where the negative definiteness of $\mathcal{L}V$ and the input constraints are met: $\phi_d=\{ x \in \phi_n ~|~ \inf_{ u \in U } \mathcal{L}V + \kappa V(x) \leq 0, \kappa > 0\}$.
+	
+	Additionally, we define the level set of $V(x)$ inside $\phi_d$ as $\Omega_\rho= \{ x \in \phi_d   ~|~ V(x) \leq \rho \}$. It should be noted that although $\Omega_{\rho}$ is an invariant set for the nominal system of Eq.~\ref{eq:nonlin_sys} with $w(t) \equiv 0$ under the controller $\Phi_s(x)$ due to $\Omega_{\rho} \subset \phi_d \subset \phi_n$, it does not remain invariant for the stochastic system of Eq.~\ref{eq:nonlin_sys} due to the unbounded disturbance of $w(t)$.
+	%ref (i.e., $\mathbf{P}(x(t) \in \Omega_{\rho}, \forall t\geq 0 ~|~ \forall x(0) \in \Omega_{\rho} )= 1$) due to
+	
+	%Since $\Omega_{\rho}$ is both a invariant set in $\phi_n$ and a level set in $\phi_d$, given any initial condition $x(0) \in \Omega_\rho$, it is guaranteed that $\forall t \geq 0$, $$ $ \mathbf{E}(x(t)) \in \Omega_\rho$. It should be noted that unlike the stability region defined for the deterministic system in LEMPC PAPER,
+	
+	
+	
+	%\subsection{Stochastic Lyapunov-based Controller}
+	%Assuming there exists a positive-definite $C^2$ function $V$ that satisfies the properties of Control Lyapunov Function, then the following stochastic feedback control law $\Phi_s(x)$ from DENG PAPER, which is an extension of Sontag universal control law, is utilized here to enforce $\mathcal{L}V < 0$, which guarantees the stability of the closed-loop system in probability.
+	%
+	%Similar to the null controllable region $\phi_d=\{ x \in \mathbf{R}^n~|~ \inf_{ u \in U } \dot{V} + \alpha V(x) \leq 0, \alpha > 0\} $ defined in the deterministic system of Eq.~\ref{eq:nonlin_sys} under the stochastic Lyapunov-based control law $\Phi_s(x)$, we can find a region $\phi_u$ where the negative definiteness of $\mathcal{L}V$ and the input constraints are met: $\phi_u=\{ x \in \mathbf{R}^n ~|~ \inf_{ u \in U } \mathcal{L}V + \alpha V(x) \leq 0, \alpha > 0\}$. Also, we define the level set of $V(x)$ inside the $\phi_u$ as $\Omega_\rho= \{ x \in \phi_u ~|~ V(x) \leq \rho \}$. Since $\Omega_{\rho}$ is a invariant set in probability, given any initial condition $x(0) \in \Omega_\rho$, it is guaranteed that $\forall t \geq 0, \mathbf{E}(x(t)) \in \Omega_\rho$. It should be noted that unlike the stability region defined for the deterministic system in LEMPC PAPER, $\Omega_{\rho}$ here does not guarantee the absolute stability (i.e., $\mathbf{P}(x(t) \in \Omega_{\rho}, \forall t\geq 0 ~|~ \forall x(0) \in \Omega_{\rho} )= 1$) due to the unbounded disturbance.
+	
+	\section{Main Results}
+	In this section, the optimization problem of SLEMPC is first presented based on the standard LEMPC. Then, the stability and feasibility in probability of the closed-loop system of Eq.~\ref{eq:nonlin_sys} is investigated under the sample and hold implementation of the proposed SLEMPC.
+	
+	\subsection{Lyapunov-based EMPC}
+	The LEMPC optimizes the economic cost function $L_e(\cdot,\cdot)$ and maintains the closed-loop states of the nominal system of Eq.~\ref{eq:nonlin_sys} with $w(t) \equiv 0$ in a stability region. The LEMPC design~\cite{Heidarinejad2012855} is given by the following optimization problem:
+	 \begin{subequations}
+		\label{eq:nLEMPC}
+		\begin{align}
+		&\underset{u \in S(\Delta)}{\text{max}}  \int_{0}^{\tau_{N} \Delta} L_e( \tilde{x}(t), u(t)) \, dt \label{eq:nLEMPC:cost} \\
+		\text{s.t.} & ~\dot{\tilde{x}}(t) = f(\tilde{x}(t), u(t),0) \label{eq:nLEMPC:model} \\
+		& ~ \tilde{x}(t_k) = x(t_k) \label{eq:nLEMPC:state} \\
+		&~u(t) \in U, \quad \forall \, t \in [0, \tau_{N} \Delta) \label{eq:nLEMPC:input} \\
+		&~ V(\tilde{x}(t)) < \rho_e',~ \mbox{if}~V(x(t_k)) < \rho_e', \forall t \in [0, \tau_{N} \Delta)  \label{eq:nLEMPC:mode1}\\
+		&~\dot{V}(\tilde{x}(t_k),u) \leq \dot{V}(\tilde{x}(t_k),\Phi_n(\tilde{x}(t_k)))\nonumber\\
+		&	~ \mbox{if}~ \rho_e' \leq V(x(t_k)) \leq  \rho', \quad \forall t \in [0, \tau_{N} \Delta)\label{eq:nLEMPC:mode2}
+		\end{align}
+	\end{subequations}
+where $\tilde{x}$ is the predicted state trajectory, $S(\Delta)$ is the set of piecewise constant functions with period $\Delta$, and $\tau_{N}$ is the number of sampling periods of the prediction horizon. $\Phi_n(x)$ is the stabilizing feedback control law for the nominal system ($w(t) \equiv 0$) of Eq.~\ref{eq:nonlin_sys} such that the origin of the system of Eq.~\ref{eq:nonlin_sys} can be rendered asymptotically stable. $\Omega_{\rho_e}'$ is a level set inside $\phi_{n}$: $\Omega_{\rho_e}' :=\{ x \in \phi_n ~|~ V(x) \leq \rho_e', \rho_e' <\rho'\}$.
+
+
+	\subsection{Stochastic Lyapunov-based EMPC}
+	%The SLEMPC directly optimizes the economic cost function $L_e(\cdot,\cdot)$.
+	Inspired by the standard LEMPC design, the SLEMPC design is given by the following optimization problem:
+	\begin{subequations}
+		\label{eq:SLEMPC}
+		\begin{align}
+		&\underset{u \in S(\Delta)}{\text{max}}  \int_{0}^{\tau_{N} \Delta} L_e( \tilde{x}(t), u(t)) \, dt \label{eq:SLEMPC:cost} \\
+		\text{s.t.} & ~\dot{\tilde{x}}(t) = f(\tilde{x}(t), u(t),0) \label{eq:SLEMPC:model} \\
+		& ~ \tilde{x}(t_k) = x(t_k) \label{eq:SLEMPC:state} \\
+		&~u(t) \in U, \quad \forall \, t \in [0, \tau_{N} \Delta) \label{eq:SLEMPC:input} \\
+		&~ V(\tilde{x}(t)) < \rho_e,~ \mbox{if}~V(x(t_k)) < \rho_e, \forall t \in [0, \tau_{N} \Delta) \label{eq:SLEMPC:mode1}\\
+		&~\mathcal{L}V(\tilde{x}(t_k),u) \leq \mathcal{L}V(\tilde{x}(t_k),\Phi_s(\tilde{x}(t_k))) \nonumber\\
+		&~ \mbox{if}~ \rho_e \leq V(x(t_k)) \leq  \rho, \quad \forall \, t \in [0, \tau_{N} \Delta) \label{eq:SLEMPC:mode2}
+		\end{align}
+	\end{subequations}
+%	where $\tilde{x}$ is the predicted state trajectory, $S(\Delta)$ is the set of piecewise constant functions with period $\Delta$, and $\tau_{N}$ is the number of sampling periods of the prediction horizon. $\Omega_{\rho_e}$ is a level set inside $\phi_{u}$: $\Omega_{\rho_e} :=\{ x \in \phi_d ~|~ V(x) \leq \rho_e, \rho_e <\rho \}$.
+where the notation and constraints of Eqs.~\ref{eq:SLEMPC:cost}-\ref{eq:SLEMPC:mode2} are equivalent to the notation and constraints of Eqs.~\ref{eq:nLEMPC:cost}-\ref{eq:nLEMPC:mode2} except using $\rho$ and $\rho_e$ to replace $\rho$ and $\rho_e'$, respectively. Similarly, $\Omega_{\rho_e}$ is a level set inside $\phi_{d}$: $\Omega_{\rho_e} :=\{ x \in \phi_d ~|~ V(x) \leq \rho_e, \rho_e <\rho \}$. The optimal input trajectory to the optimization problem of the SLEMPC is $u^*(t)$, which is calculated over the entire prediction horizon $t \in [t_k, \, t_k + \tau_{N} \Delta)$. The control action computed for the first sampling period of the prediction horizon $u^*(t_k)$ is sent to the SLEMPC to be applied over the sampling period and the SLEMPC is resolved at the next sampling period.
+	
+	In the optimization problem of Eq.~\ref{eq:SLEMPC}, the objective function of Eq.~\ref{eq:SLEMPC:cost} is the integral of $L_e(\tilde{x}(t), u(t))$ over the prediction horizon. The constraint of Eq.~\ref{eq:SLEMPC:model} is the nominal system of Eq.~\ref{eq:nonlin_sys} ($w(t) \equiv 0$) that is used to predict the states of the closed-loop system. Eq.~\ref{eq:SLEMPC:state} defines the initial condition $\tilde{x}(t_k)$ of the optimization problem. Eq.~\ref{eq:SLEMPC:input} defines the input constraints applied over the entire prediction horizon. The constraint of Eq.~\ref{eq:SLEMPC:mode1} maintains the predicted states in $\Omega_{\rho_e}^{\text{o}}$ when the current state $x(t_k) \in \Omega_{\rho_e}$. However, if $x(t_k) \in \Omega_{\rho} \backslash \Omega_{\rho_e}^{\text{o}}$, the constraint of Eq.~\ref{eq:SLEMPC:mode2} is activated to decrease $V(x)$ such that $x(t)$ will move back to $\Omega_{\rho_e}^{\text{o}}$. Since $V(x)$ is required by Eq.~\ref{eq:SLEMPC:mode2} to decrease at least at the rate of the Lyapunov-based controller $\Phi_s(x)$, it is guaranteed that within finite sampling steps, $x(t)$ will enter and remain in $\Omega_{\rho_e}^{\text{o}}$ thereafter again by the constraint of Eq.~\ref{eq:SLEMPC:mode1}.
+
+\begin{rmk}
+	It should be noted that there exist differences between the feedback control law $\Phi_n(x)$ applied in the standard LEMPC of Eq.~\ref{eq:nLEMPC} and $\Phi_s(x)$ applied in the SLEMPC of Eq.~\ref{eq:SLEMPC}. Specifically, $\Phi_n(x)$ satisfies $\dot{V}=L_fV(x)+L_gV(x) \Phi_n(x) \leq -\alpha_1(\vert x \vert)$ such that the constraint of Eq.~\ref{eq:nLEMPC:mode2} enforces that $V(x(t)) \leq V(x(t_k)), \forall t> t_k$ and thus, the states of the closed-loop system of Eq.~\ref{eq:nonlin_sys} move towards the origin. However, under the control law $\Phi_s(x)$ that satisfies Eq.~\ref{LV}, the constraint of Eq.~\ref{eq:SLEMPC:mode2} no longer guarantees the decrease of $V(x)$ for certainty, but ensures that $\mathbf{E}(V(x(t))) \leq V(x(t_k)), \forall t> t_k$. Furthermore, if the constraint of Eq.~\ref{eq:nLEMPC:mode2} is continuously applied in the standard LEMPC of Eq.~\ref{eq:nLEMPC} no matter where $x(t_k)$ is, as a result, the system of Eq.~\ref{eq:nonlin_sys} can be rendered asymptotically stable at the origin. However, if the constraint of Eq.~\ref{eq:SLEMPC:mode2} is applied in the SLEMPC of Eq.~\ref{eq:SLEMPC} for all time, then the origin of the system of Eq.~\ref{eq:nonlin_sys} can be rendered asymptotically stable in probability.
+\end{rmk}
+%\begin{rmk}
+%	Although the design and application of the standard LEMPC of Eq.~\ref{eq:nLEMPC} is based on the nominal system of Eq.~\ref{eq:nonlin_sys} with $w(t) \equiv 0$, one can design a well-modified robust LEMPC that can handle the bounded disturbances without the loss of stabilizability. Assuming $dw$ is bounded by $.$ Specifically, 	
+%\end{rmk}
+
+\subsection{Sample-and-hold implementation}
+
+Since the control actions are implemented in a sample-and-hold fashion in the SLEMPC, in this subsection, we investigate the impact of the sample-and-hold implementation on the stability of the closed-loop system of Eq.~\ref{eq:nonlin_sys} following similar arguments in \cite{mahmood2012lyapunov} and \cite{homer2017output}. Specifically, the probability of the set $\Omega_{\rho}$ remaining invariant under the sample-and-hold implementation of SLEMPC of Eq.~\ref{eq:SLEMPC} with a sampling time ($\Delta$) is given as follows.
+\begin{thm}\label{thm3}
+	Consider the system of Eq.~\ref{eq:nonlin_sys} with the stability region $\Omega_{\rho}$ inside $\phi_d$. Let $u(t)=u(t_k), \forall t \in [t_{k}, t_k+\Delta)$. Then, given any probability $\lambda \in [0,1)$, there exists a sampling time $\Delta^* := \Delta^*(\lambda)$, and $\rho_s < \rho_{min} <\rho_{e} <\rho$, such that if $\Delta \in (0,\Delta^*]$, then 	
+	%Mode 1:
+	\begin{equation}
+	\label{eq:sample_p1}
+	%	\mathbf{P}(\sup \limits_{t \in[0,\tau_{\Omega_{\rho}}(\Delta)]}\{V(x(t)) < \rho \}) \geq 1-
+	\mathbf{P}(\sup \limits_{t \in[0,\Delta]}V(x(t)) < \rho ) \geq 1-
+	\lambda,~\forall x(0) \in \Omega_{\rho_e}^{\text{o}}
+	\end{equation}
+	
+	%Mode 2:
+	\begin{equation}
+	\label{eq:sample_p2}
+	\begin{split}
+	%	\mathbf{P}(\sup \limits_{t \in [0, \tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}(\Delta)}]}
+	&\mathbf{P}(\sup \limits_{t \in [0, \Delta]}
+	\mathcal{L}V(x(t))<- \epsilon < 0)\\
+	&\geq 1- \lambda,~\forall x(0) \in \Omega_\rho \backslash \Omega_{\rho_s}^{\text{o}}
+	\end{split}
+	\end{equation}
+\end{thm}
+
+\hspace{0.4cm}\\
+
+\begin{proof}
+Let $A_B:= \{\omega : \sup_{t \in [0, \Delta^*]} \vert \omega(t)\vert \leq B\}$. Using the results for standard Brownian motion \cite{ciesielski1962first}, that given any probability $\lambda$, there exists a sufficiently small $B$, s.t. $P(A_B)=1-\lambda$. Also, based on the local H\"{o}lder continuity, for each sample path $x_w(t)$ with $x(0) \in \Omega_{\rho}$ and $\omega \in A_B$, there exists a positive real number $k_1$, s.t. $\sup_{t \in [0, \Delta^*]} \vert x_\omega(t)-x(0)\vert \leq k_1(\Delta^*)^r$, where $r < 1/2$. Therefore, the probability of the event $A_W = \sup_{t \in [0, \Delta^*]} \vert x(t)-x(0)\vert \leq k_1(\Delta^*)^r$ is:
+\begin{equation}
+\label{eq:sample_proof_p1}
+\mathbf{P}(A_W) \geq 1-\lambda
+\end{equation}
+
+
+
+% Let $\delta=\inf_{x \in \mathbf{R}^n \backslash \overline{B_{\rho}^Q}}V(x)$. Due to the continuity of $V(x)$, $V(x) \leq \delta \Rightarrow \vert x \vert_Q \leq \rho$.
+
+Based on the sample-and-hold implementation of the control actions, i.e., $u(t)=u_0, \forall t \in [0, \Delta^*]$, 
+we first prove the probability of Eq.~\ref{eq:sample_p1}. Since $V(x)$ satisfies the local Lipschitz condition, there exists a positive real number $k_2$, such that $\vert V(x(t))-V(x(0)) \vert \leq k_2 \vert x(t)- x(0) \vert$.
+
+Therefore, for all $\omega \in A_W$, if $\Delta^* < \Delta_1 = (\frac{\rho-\rho_e}{k_2k_1})^{(\frac{1}{r})}$, it follows that $V(x_\omega(t))-V(x(0)) \leq \rho -\rho_e, \forall t \leq \Delta^*$. Furthermore, $\forall x(0) \in \Omega_{\rho_{e}}^{\text{o}}$, it is obtained that $V(x_\omega(t)) < \rho$, $\forall t \leq \Delta^*$. Therefore, if $x(0) \in  \Omega_{\rho_{e}}^{\text{o}}$, the probability of $x(t)$ staying inside $\Omega_{\rho}$ is $\mathbf{P}(\sup_{t \in [0,\Delta^*]} V(x(t)) < \rho) \geq 1-\lambda$. 
+
+%ext, consider Mode 2 in which contractive constraint is applied. For the sake of proving stability under Lyapunov-based control, here, we assume contractive constraint is always applied in $\Omega_{\rho} \backslash \Omega_{\rho_s}$. then, 
+
+We now prove the probability of Eq.~\ref{eq:sample_p2} by first deriving the following equation for all $t \in [0, \Delta^*]$
+%$t \in [0, \tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}}(\Delta^*)]$
+\begin{equation}
+\begin{aligned}
+\mathcal{L}V(x(t)) = &\mathcal{L}V(x(0))+(\mathcal{L}V(x(t))- \mathcal{L}V(x(0)))\\
+%&\mathcal{L}V(x(t)) = L_fV(x(t))+L_gV(x(t))u_0 \\
+%& + \frac{1}{2}Tr\{h(x(t))^T \frac{\partial^2V(x(t))}{\partial x(t)^2}h(x(t))\}\\
+ = &\mathcal{L}V(x(0))+(L_fV(x(t))-L_fV(x(0)))\\
+&+(L_gV(x(t))-L_gV(x(0)))u_0 \\
+&+ \frac{1}{2}Tr\{h(x(t))^T \frac{\partial^2V(x(t))}{\partial x(t)^2}h(x(t))\}\\
+&- \frac{1}{2}Tr\{h(x(0)))^T \frac{\partial^2V(x(0))}{\partial x(0)^2}h(x(0))\}
+\end{aligned}
+\end{equation}
+
+%& = L_fV(x(0))+L_gV(x(t))u_0 \\
+%& + \frac{1}{2}Tr\{h_0)^T \frac{\partial^2V(x(0))}{\partial x(0)^2}h(x(0))\}\\
+For any $x(0) \in \Omega_{\rho} \backslash \Omega_{\rho_s}^{\text{o}}$, it holds that $V(x(0)) \geq \rho_s$, which implies $\mathcal{L}V(x(0)) \leq - \kappa V(x(0)) \leq -\kappa\rho_s$ by the definition of $\phi_d$. Since we assume that $L_fV(x)$, $L_gV(x)$, $h(x(t))^T \frac{\partial^2V(x(t))}{\partial x(t)^2}h(x(t))$ are locally Lipschitz, there exists positive real numbers $k_3$, $k_4$, $k_5$, such that $\vert L_fV(x(t))-L_fV(x(0)) \vert \leq k_3 \vert x(t)- x(0) \vert$, $\vert L_gV(x(t))-L_gV(x(0)) \vert \leq k_4 \vert x(t)- x(0) \vert$, $\vert h(x(t))^T \frac{\partial^2V(x(t))}{\partial x(t)^2}h(x(t))-h(x(0))^T \frac{\partial^2V(x(0))}{\partial x(0)^2}h(x(0)) \vert \leq k_5 \vert x(t)- x(0) \vert$. Let $0 < \epsilon < \kappa\rho_s$ and $\Delta^* < \Delta_2 = (\frac{\kappa\rho_s-\epsilon}{k_1(k_3+k_4+k_5)})^{(\frac{1}{r})}$. It follows that $\forall \omega \in A_W$, $\mathcal{L}V(x_\omega(t)) < -\epsilon <0$, %$\forall t \leq \tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}}(\Delta^*)$ holds.
+$\forall t \leq \Delta^*$ holds. Therefore, by choosing the sampling period $\Delta \in (0,\Delta^*]$, given any initial condition $x(0) \in \Omega_{\rho} \backslash \Omega_{\rho_s}^{\text{o}}$, the probability that $\mathcal{L}V(x(t)) <-\epsilon$ holds is as follows:
+$\mathbf{P}(\sup_{t \in [0,\Delta^*]}
+%%$\mathbf{P}(\sup \limits_{t \in [0, \tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}}(\Delta)]}
+\mathcal{L}V(x(t)) <- \epsilon) \geq 1- \lambda$.
+Finally, let $\Delta^*\leq \min \{ \Delta_1, \Delta_2\}$, the probabilities of Eq.~\ref{eq:sample_p1} and Eq.~\ref{eq:sample_p2} are both satisfied for $\Delta \in (0, \Delta^*]$.
+\end{proof}
+
+%Let $\Delta^* \leq \min\{(\frac{\kappa\rho_s-\epsilon}{k_1(k_3+k_4+k_5)})^{(\frac{1}{r})}, (\frac{\rho-\rho_e}{k_2k_1})^{(\frac{1}{r})}\}$, then for $\Delta \in (0,\Delta^*]$, Eq.~\ref{eq:sample_p1} and Eq.~\ref{eq:sample_p2} hold.
+
+
+\subsection{Stability in probability}
+In this subsection, the probabilistic stability of the SLEMPC of Eq.~\ref{eq:SLEMPC} applied in a sample-and-hold fashion is established through three aspects, which are the possibility of the closed-loop states $x(t)$ staying in $\Omega_{\rho}$, the possibility of $x(t)$ moving back to $\Omega_{\rho_{e}}$ and the possibility of $x(t)$ ultimately converging to $\Omega_{\rho_{min}}$ if continuously using the constraint of Eq.~\ref{eq:SLEMPC:mode2}. Theorem~\ref{thm4} below provides the probabilities with respect to the above three events, which are also shown as the realizations starting from $x^1$, $x^2$ and $x^3$, respectively in Fig.~\ref{fig:region}.
+
+\begin{figure}[!htb]
+	\centering
+	\includegraphics[trim={0cm 10cm 1cm 6cm}, width=1\columnwidth]{fig/region}
+	\vspace{-8pt}
+	\caption{A schematic representing the null controllable region $\phi_{d}$, the level sets $\Omega_{\rho}$, $\Omega_{\rho_e}$, $\Omega_{\rho_{min}}$, and $\Omega_{\rho_s}$, together with three realizations starting from $x^1$, $x^2$ and $x^3$, which corresponds to the events listed in Theorem~\ref{thm4}.}
+	\label{fig:region}
+	\vspace{-6pt}
+\end{figure}
+
+
+
+\begin{thm}\label{thm4}
+	Consider the system of Eq.~\ref{eq:nonlin_sys} under the SLEMPC of Eq.~\ref{eq:SLEMPC} applied in a sample-and-hold implementation (i.e., $u(t)=u(i \Delta)$, $\forall ~i \Delta \leq t < (i+1) \Delta$, $i=0,1,2,...$. Then, given any positive real number $\rho_e$, and probability $\lambda \in [0,1)$, there exist a sampling time  $\Delta \in (0,\Delta^*(\lambda)]$ and probabilities $\beta, \beta', \gamma, \gamma' \in [0,1)$ such that
+	\begin{equation}\label{eq:mode1_stochastic}
+\begin{split}
+\mathbf{P}(&\sup \limits_{t \in [0, \Delta)}V(x(t)) < \rho )\\
+&\geq (1-\beta)(1- \lambda),~~~\forall x(0) \in \Omega_{\rho_e}
+\end{split}	
+\end{equation}	
+\begin{equation} \label{eq:mode2_stochastic}
+\begin{split}
+\mathbf{P}( &\tau_{\mathbf{R}^n \backslash \Omega_{\rho_e}}(\Delta) \leq \tau_{\Omega_{\rho}}(\Delta) )\\
+&\geq (1-\gamma')(1- \lambda),~~~\forall x(0) \in \Omega_{\rho'} \backslash \Omega_{\rho_e}^{\text{o}} %^{\eta}
+%	\inf_{x_0 \in \Omega_{\rho'} \backslash \Omega_{\rho_e}} \mathbf{P} \{\tau_{\mathbf{R}^n \backslash \Omega_{\rho_e}} < \tau_{\Omega_{\rho}} \} \geq (1-\gamma')(1- \lambda)%^{\eta}
+\end{split}	
+\end{equation}	
+\begin{equation}
+\label{eq:mode3_stochastic}
+\begin{split}
+\mathbf{P} (&\sup \limits_{t \in [0, \Delta)} V(x(t)) < \rho,~\tau_{\mathbf{R}^n \backslash \Omega_{\rho_s}} < \infty,\\
+%\sup \limits_{t \geq 0} \vert x(t+\tau_{\mathbf{R}^n \backslash \Omega_{\rho_{min}}}) \vert_Q \leq \rho_{min},
+&\sup \limits_{t \in [0, \Delta)} V(x(t+\tau_{\mathbf{R}^n \backslash \Omega_{\rho_s}})) \leq \rho_{min})\\
+&\geq (1-\beta')(1-\gamma)(1-\lambda)^2,~~~\forall x(0) \in \Omega_{\rho} \backslash \Omega_{\rho_s}^{\text{o}}
+\end{split}
+\end{equation}
+
+\vspace{0.5cm}
+	where 
+	\begin{subequations}\label{eq:beta}
+		\begin{equation}\label{eq:beta1}
+		\frac{\sup_{x \in \partial \Omega_{\rho_e}} V(x)}{\inf_{x \in \mathbf{R}^n \backslash \Omega_{\rho}} V(x)} \leq \beta 
+		\end{equation}
+		\begin{equation}\label{eq:gamma}
+		\sup \limits_{x \in \Omega_{\rho_e} \backslash \Omega_{\rho_s}^{\text{o}}}	\frac{V(x)}{\rho} \leq \gamma 
+		\end{equation}
+		\begin{equation}\label{eq:gamma'}
+		\sup \limits_{x \in \Omega_{\rho}' \backslash \Omega_{\rho_e}^\text{o}}	\frac{V(x)}{\rho} \leq \gamma'
+		\end{equation}	
+		\begin{equation}\label{eq:beta2}
+		\frac{\sup_{x \in \partial \Omega_{\rho_s}} V(x)}{\inf_{x \in \mathbf{R}^n \backslash \Omega_{\rho_{min}}} V(x)} \leq \beta' 
+		\end{equation}
+		%  \begin{equation}\label{eq:eta}
+		% \min_{\eta} \{\eta \Delta\} \geq \tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}} 
+		% \end{equation}
+	\end{subequations}
+\end{thm}
+
+\vspace{0.5cm}
+
+\begin{proof}
+The proof consists of three parts. In the first part, we show that under the SLEMPC of Eq.~\ref{eq:SLEMPC}, any $x(0)$ originating inside $\Omega_{\rho_e}$ has the probability of Eq.~\ref{eq:mode1_stochastic} staying in $\Omega_{\rho}$. However, if $x(0) \in \Omega_{\rho} \backslash \Omega_{\rho_e}$, we prove that under the SLEMPC of Eq.~\ref{eq:SLEMPC}, there exists the probability of Eq.~\ref{eq:mode2_stochastic} for the state of the closed-loop system to move back into $\Omega_{\rho_e}$ before it leaves $\Omega_{\rho}$. Lastly, we show that if the contractive constraint of Eq.~\ref{eq:SLEMPC:mode2} is applied all the time, the state of the closed-loop system will ultimately enter a small ball $\Omega_{\rho_{min}}$ around the origin while always remaining in $\Omega_{\rho}$ with the probability of Eq.~\ref{eq:mode3_stochastic}, which means the system can be stabilized in probability under the Lyapunov-based controller. 
+
+%It should be noted that the stability concept for stochastic systems is different from the one for deterministic case. In LEMPC paper, the stability under Mode 1 means that states will always stay in $\Omega_{\rho_e}$ if starting in $\Omega_{\rho_e}$. Since now, the disturbance is introduced into the system, such stability can no longer be guaranteed for sure.
+
+$Part ~1:$ To show that Eq.~\ref{eq:mode1_stochastic} holds for all $x(0) \in \Omega_{\rho_e}$, it is sufficient to show that the extreme case $x(0) \in \partial \Omega_{\rho_e}$ satisfies Eq.~\ref{eq:mode1_stochastic}. Assuming $x(0) \in \partial \Omega_{\rho_e}$, under the constraint of Eq.~\ref{eq:SLEMPC:mode2}, the optimization problem of Eq.~\ref{eq:SLEMPC} is solved such that $\mathcal{L}V$ is enforced to be negative for any $x(t) \in \Omega_{\rho} \backslash \Omega_{\rho_e}^{\text{o}}$.
+%Therefore, we prove the stability of stochastic system under 2 modes by firstly showing that the probability of states starting in $\Omega_{\rho_e}$, and remaining inside $\Omega_{\rho}$. According to the formulation of Mode 1, there is no specific requirement for $\mathcal{L}V$ when $x(t) \in \Omega_{\rho_e}$. In other words, $u(t)$ could be any value within input constraints in order to maximize the object function. When the states leave $\Omega_{\rho_e}$, then $\mathcal{L}V$ is required to be less than $-\kappa V(x)$ for all $x(t)$ in $\Omega_\rho \backslash \Omega_{\rho_e}$.
+Using Eq.~\ref{dynkin}, the following inequality can be derived with $\mathcal{Z}=\Omega_\rho \backslash \Omega_{\rho_e}^{\text{o}}, T= \infty$
+\begin{equation}\label{eq:Dynkin1}
+\begin{aligned}
+\mathbf{E}&(V(x(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}^{\text{o}}}(t),t_0,x(0)))) \\
+&\leq V(x(0)) +\mathbf{E}(\int_{0}^{\tau_{\Omega_\rho \backslash \Omega_{\rho_e}^{\text{o}}}(t)} \mathcal{L}V(x(s))ds )
+\end{aligned}
+\end{equation}
+
+
+
+For the sake of simplicity, $V(x(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}^{\text{o}}}(t),t_0,x(0)))$ will be denoted as $V(x(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}^{\text{o}}}(t)))$ in the rest of the paper. We can also derive the following probability using similar arguments as in \cite{battilotti2003stabilization}, for all $x(0) \in \partial \Omega_{\rho_e}$,
+\begin{subequations}\label{P1}
+	\begin{align}
+	\mathbf{P}^*&(V(x(t)) \geq \rho,~\mathrm{for~some~t} >0 ) \nonumber\\
+	&\leq \frac{V(x(0)) + \mathbf{E}(\int_{0}^{\tau_{\Omega_\rho \backslash \Omega_{\rho_e}^{\text{o}}}(t)} \mathcal{L}V(x(s))ds)}{\inf_{x \in \mathbf{R}^n \backslash {\Omega_{\rho} }} V(x)}\label{P1:1}\\ 
+	&\leq \frac{V(x(0))}{\inf_{x \in \mathbf{R}^n \backslash {\Omega_{\rho} }} V(x)}\label{P1:2}
+	\end{align}
+\end{subequations}
+
+%Under the constraint of Eq.~\ref{eq:SLEMPC:mode2}, $\mathcal{L}V(x) \leq -\kappa V(x)$ holds $\forall x \in \Omega_{\rho} \backslash \Omega_{\rho_e}$, which implies that $\mathcal{L}V(x) \leq -\kappa \rho_e, \forall x \in \Omega_{\rho} \backslash \Omega_{\rho_e}$. Therefore, it follows that
+%\begin{equation}
+%\mathbf{E}\{\int_{0}^{\tau_{\Omega_\rho \backslash \Omega_{\rho_e}}(t)} \mathcal{L}V(x(s))ds \} \leq -\kappa \rho_e \tau_{\Omega_\rho \backslash \Omega_{\rho_e}}(t)
+%\end{equation} 
+%This simplifies the probability of Eq.\ref{P1} as follows,
+
+
+Combining Eq.~\ref{P1} with Eq.~\ref{eq:beta1} and taking the complementary events, the following probability is obtained:
+\begin{equation}\label{complement}
+\inf \limits_{x(0) \in \partial{\Omega_{\rho_e}} }\mathbf{P}^*(V(x(t)) < \rho, \forall t >0 ) \geq (1-\beta)
+%&\leq \frac{V(x(0)) -\kappa \rho_e \tau_{\Omega_\rho \backslash \Omega_{\rho_e}}(t)}{\inf_{x \in \mathbf{R}^n \backslash {\Omega_{\rho} }} V(x)}\\
+\end{equation}
+Following Eq.~\ref{complement}, the probability of Eq.~\ref{eq:mode1_stochastic} is obtained via Bayes' formula.
+
+%\hspace{0.1cm}
+
+$Part ~2:$
+If $x(0) \in \Omega_{\rho} \backslash \Omega_{\rho_e}^{\text{o}}$, we consider the event that the closed-loop realization of the system of Eq.~\ref{eq:nonlin_sys} moves back to $\Omega_{\rho_e}$ without leaving $\Omega_{\rho}$, of which the probability is obtained in this part. Assuming $x(0) \in \partial \Omega_{\rho}'$, where $\Omega_{\rho}' := \{ x \in \phi_d ~|~ V(x) \leq \rho'$, $\rho' \in [\rho_e,\rho]\}$, we can show the following probability using similar arguments as in \cite{battilotti2003stabilization}:
+\begin{equation}
+\mathbf{P}^*(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}} < \infty) = 1
+\end{equation}
+Then, consider the event $A_T = \{ \tau_{\mathbf{R}^n \backslash \Omega_{\rho_e}} > \tau_{\Omega_{\rho}} \}$, which implies that the state of the closed-loop system of Eq.~\ref{eq:nonlin_sys} reaches the boundary of $\Omega_{\rho}$ first. The probability of $A_T$ is achieved via Chebyshev's inequality and the fact $\{ \tau_{\mathbf{R}^n \backslash \Omega_{\rho_e}} > \tau_{\Omega_{\rho}}  \} \subseteq \{\frac{V(x(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}}))}{\rho} \geq 1\}$, which is shown as follows.
+\begin{equation}\label{p_compare}
+\begin{aligned}
+\mathbf{P}^*(\tau_{\mathbf{R}^n \backslash \Omega_{\rho_e}} > \tau_{\Omega_{\rho}}  ) &\leq \mathbf{P}^*(\frac{V(x(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}}))}{\rho} \geq 1)\\
+& \leq \frac{V(x(0))}{\rho}
+\end{aligned}
+\end{equation}
+Based on Eq.~\ref{eq:gamma'}, it follows that
+\begin{equation}
+\sup \limits_{x(0) \in \Omega_{\rho}' \backslash \Omega_{\rho_e}} \mathbf{P}^*(\tau_{\mathbf{R}^n \backslash \Omega_{\rho_e}} > \tau_{\Omega_{\rho} }) \leq \gamma'
+\end{equation} Therefore, %combined with the fact that $\mathbf{P}^*\{\tau_{\mathbf{R}^n \backslash \Omega_{\rho_e}} = \tau_{\Omega_{\rho}} \} = 0$, and 
+ taking the complementary event of $A_T$, the probability of Eq.~\ref{eq:mode2_stochastic} is obtained. 
+
+
+%Under the constraint of Eq.~\ref{eq:SLEMPC:mode2}, if follows that the $u(t)$ is chosen such that $\mathcal{L}V \leq -\kappa V(x), \forall x \in \Omega_{\rho} \backslash \Omega_{\rho_e}$ due to the same reasons in $Part ~1$, which implies that there exists a positive number $\kappa$, such that $\mathcal{L}V \leq -\kappa < 0 $, $\forall x \in \Omega_{\rho} \backslash \Omega_{\rho_e}$. Again, Using Eq.~\ref{dynkin}, in which $\mathcal{Z}=\Omega_{\rho} \backslash \Omega_{\rho_e}$, it follows that,
+%\begin{equation}
+%-\kappa \mathbf{E}\{\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}}(t) \} \leq V(x(0))
+%\end{equation}
+
+%Then, by Cebysev inequality, it is obtained that $\mathbf{P}^*\{\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}} - t_0 \geq r- t_0 \} \leq \frac{V(x(0))}{\kappa(r-t_0)}$ with $r \geq t_0$. Therefore, as $r \rightarrow \infty$, taking the complementary events of the above probability, it follows that $\mathbf{P}^*\{\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}} \leq \infty\} = 1$.
+
+%Following an argument in \cite{}, it can be shown that $\mathbf{P}^*\{\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}} \leq \infty\} = 1$. Then, we show the probability of the states getting back into $\Omega_{\rho_e}$ before leaving $\Omega_{\rho}$, which is equivalent to the probability of the following event.
+
+
+
+%where $\gamma'$ is defined as $\sup \limits_{x \in \Omega_{\rho}' \backslash \Omega_{\rho_e}}	\frac{V(x)}{\rho} \leq \gamma'$. Since $\mathcal{L}V \leq -\kappa V(x), \forall x \in (\Omega_{\rho} \backslash \Omega_{\rho_e}) \subset (\Omega_{\rho} \backslash \Omega_{\rho_s})$, the following inequality can be derived through Dynkin's formula, which is similar to Eq.~\ref{eq:Dynkin1}.
+%\begin{equation}\label{eq:Dynkin11}
+%\mathbf{E}\{V(x(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_e}}(t),t_0,x(0)))\} \leq V(x(0))
+%\end{equation}
+
+
+
+
+
+%Remark: Consider the extreme case that $x(0)$ is on the boundary of $\Omega_{\rho}$ (i.e., $\rho'=\rho$), the above probability becomes greater than 0. In this case, it cannot demonstrate that states will re-enter $\Omega_{\rho_e}$ in some probability. 
+
+
+
+$Part ~3:$ Next, we consider the scenario where the contractive constraint of Eq.~\ref{eq:SLEMPC:mode2} is implemented successively and calculate the probability of the closed-loop trajectory entering $\Omega_{\rho_{min}}$ in finite time. Since we assume the constraint of Eq.~\ref{eq:SLEMPC:mode2} is applied for all $x \in \Omega_{\rho} \backslash \Omega_{\rho_s}^{\text{o}}$, $\mathcal{L}V \leq -\kappa V(x)$ holds for all $x \in \Omega_{\rho} \backslash \Omega_{\rho_s}^{\text{o}}$. As a result, the following equations can be derived using the same steps for Eqs.~\ref{eq:Dynkin1} and~\ref{p_compare} when $\mathcal{L}V \leq -\kappa V(x)$ holds $\forall x \in \Omega_{\rho} \backslash \Omega_{\rho_e}^{\text{o}} $.
+%which implies that there exists a positive number $\kappa$, such that $\mathcal{L}V \leq -\kappa < 0 $. Again, Using Dynkin's formula, in which $\mathcal{Z}=\Omega_{\rho} \backslash \Omega_{\rho_s}$, it follows that, 
+%\begin{equation}
+%-\kappa \mathbf{E}\{\tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}}(t) - t_0 \} \leq V(x(0))
+%\end{equation}
+%Then, by Cebysev inequality, it is obtained that $\mathbf{P}^*\{\tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}} - t_0 \geq r- t_0 \} \leq \frac{V(x(0))}{\kappa(r-t_0)}$ with $r \geq t_0$. Therefore, as $r \rightarrow \infty$, taking the complementary events of the above probability, it follows that $\mathbf{P}^*\{\tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}} \leq \infty\} = 1$. Since $\mathcal{L}V \leq -\kappa V(x), \forall x \in \Omega_{\rho} \backslash \Omega_{\rho_s}$, the following inequality can be derived through Dynkin's formula, which is similar to Eq.~\ref{eq:Dynkin1}.
+\begin{subequations}\label{eq:Dynkin2}
+	\begin{align}
+\mathbf{E}&(V(x(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}}(t)))) \leq V(x(0))\\
+\mathbf{P}&^*(\tau_{\mathbf{R}^n \backslash \Omega_{\rho_s}} > \tau_{\Omega_{\rho}}   ) \nonumber\\
+&\leq \mathbf{P}^*(\frac{V(x(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}^{\text{o}}},t_0,x(0)))}{\rho} \geq 1)\nonumber\\
+& \leq \frac{V(x(0))}{\rho}
+\end{align}
+\end{subequations}
+Due to the fact that $\mathbf{P}^*(\tau_{\mathbf{R}^n \backslash \Omega_{\rho_s}} = \tau_{\Omega_{\rho_e}} ) = 0$, using Eq.~\ref{eq:gamma}, the following probability is obtained by taking the complementary events.
+%\begin{equation}
+%\sup \limits_{x(0) \in \Omega_{\rho_e} \backslash \Omega_{\rho_s}} \mathbf{P}^*\{\tau_{\mathbf{R}^n \backslash \Omega_{\rho_s}} > \tau_{\Omega_{\rho_e} }\} \leq \gamma
+%\end{equation}
+\begin{equation}\label{eq:gamma_eqn}
+\inf_{x(0) \in \Omega_{\rho_e} \backslash \Omega_{\rho_s}^{\text{o}}} \mathbf{P}^*(\tau_{\mathbf{R}^n \backslash \Omega_{\rho_s}} < \tau_{\Omega_{\rho} }) \geq 1-\gamma
+\end{equation}		
+
+It remains to show that for all $x(0) \in \Omega_{\rho_s}$, there exists certain probability that the states of the closed-loop system will stay in $\Omega_{\rho_{min}}$. Similar to the proof in Part 1, we assume $x(0) \in \partial \Omega_{\rho_s}$ and obtain the following inequality based on Eq.~\ref{dynkin} with $\mathcal{Z}=\Omega_{\rho} \backslash \Omega_{\rho_s}^{\text{o}}, T= \infty$:
+\begin{equation}\label{eq:Dynkin3}
+\mathbf{E}(V(x(\tau_{\Omega_{\rho} \backslash \Omega_{\rho_s}}(t)))) \leq V(x(0)) 
+\end{equation}
+Again, following the same steps as performed in Eqs.~\ref{P1} and~\ref{complement}, the following probability is obtained for all $x(0) \in \partial \Omega_{\rho_s}$,
+\begin{equation}\label{P2}
+	\begin{aligned}
+	&\mathbf{P}^*(V(x(t)) > \rho_{min},~\mathrm{for~some~t} >0 ) \\
+	&\leq \frac{V(x(0))}{\inf_{x \in \mathbf{R}^n \backslash {\Omega_{\rho_{min}} }} V(x)}
+	\end{aligned}
+\end{equation}
+
+Using Eq.~\ref{eq:beta2}, and taking the complementary event, we can derive
+\begin{equation}\label{eq:betaprime}
+\inf \limits_{\forall x(0) \in \partial\Omega_{\rho_s}} \mathbf{P}^*(V(x(t)) \leq \rho_{min},~\forall t > 0 ) \geq (1-\beta'), 
+\end{equation}
+Therefore, the probability of Eq.~\ref{eq:mode3_stochastic} is obtained from Eq.~\ref{eq:gamma_eqn}, Eq.~\ref{eq:betaprime}, and Bayes formula.
+\end{proof}
+\begin{rmk}\label{rmk2}
+The probabilities of Eqs.~\ref{eq:mode1_stochastic},~\ref{eq:mode2_stochastic},~\ref{eq:mode3_stochastic} are derived to quantify the probability of the state of the closed-loop system of Eq.~\ref{eq:nonlin_sys} under $\Phi_s(x)$staying in $\Omega_{\rho}$ during one sampling period. Moreover, we can further calculate the probabilities of Eqs.~\ref{eq:mode1_stochastic},~\ref{eq:mode2_stochastic},~\ref{eq:mode3_stochastic} over the prediction horizon $[0,\tau_{N})$ for the SLEMPC of Eq.~\ref{eq:SLEMPC}. For example, assuming $x(0) \in \Omega_{\rho_e}$, the overall probability for the states of the closed-loop system staying in $\Omega_{\rho}$ with $t \in [0,\tau_{N})$ is the product of each probability within one sampling time. Specifically, $\forall x(0) \in \Omega_{\rho_e}$, let $V(\tilde{x}(t+i \Delta)) =\rho_i < \rho,~ i=0,1,...,\tau_{N}-1$ and the event $A_S = \sup_{t \in [0, \tau_N \Delta)} V(x(t)) < \rho $ represents that the SLEMPC of Eq.~\ref{eq:SLEMPC} maintains the process states within $\Omega_{\rho}$ over the prediction horizon $t \in [0, \tau_N \Delta)$, the probability of $A_S$ extended from Eq.~\ref{eq:mode1_stochastic} can be calculated as follows:
+\begin{equation}\label{recursive}
+\mathbf{P}(A_S) \geq (1- \lambda)^{\tau_{N}} \prod \limits_{i=0,1,...,\tau_{N}-1} (1-\beta_i)
+\end{equation}
+where $\beta_i$ follows similar definition of $\beta$ of Eq.~\ref{eq:beta1}:
+\begin{subequations}\label{eq:betai}
+	\begin{align}
+&\frac{\sup_{x \in \partial \Omega_{\rho_i}} V(x)}{\inf_{x \in \mathbf{R}^n \backslash \Omega_{\rho}} V(x)} \leq \beta_i' \\
+&\beta_i= \max \{\beta, \beta_i'\}
+\end{align}
+\end{subequations}
+From Eq.~\ref{eq:betai}, $\beta_i$ takes the maximum value of $\beta$ and $\beta_i'$ for the reason that if $\tilde{x}(t) \in \Omega_{\rho_i} \subset \Omega_{\rho_e}$, the probability is already given in Eq.~\ref{eq:mode1_stochastic}, while the probability for the case that $\tilde{x}(t) \in \Omega_{\rho_i} \supset \Omega_{\rho_e}$ is, however, dependent on the value of $\Omega_{\rho_i}$.
+\end{rmk}
+
+
+%Remark
+%It should be noted that the probabilities of Eqs.~\ref{eq:mode1_stochastic},~\ref{eq:mode2_stochastic},~\ref{eq:mode3_stochastic} are only the lower bounds for those events. For example, consider the probability of Eq.~\ref{eq:mode1_stochastic}, though it holds true for different disturbances with various probability distribution functions (PDF) that satisfy the properties of $\phi_d$, the experimental probabilities will show the differences among the disturbances with different PDFs. One reason is due to the simplification from Eq.~\ref{P1:1} to Eq.~\ref{P1:2}. Based on the definition of $\mathcal{L}V$ in Eq.~\ref{eq:generator}, it is trivial to show that under the same control action, $\mathcal{L}V$ increases as the disturbance becomes larger. Therefore, if we take the impact of $\mathcal{L}V$ into consideration in Eq.~\ref{P1}, the lower bound of Eq.~\ref{eq:mode1_stochastic} increases as the PDF of disturbance becomes tighter, which is consistent with the common sense that the smaller the disturbance is, the more probability the states of the closed-loop system will stay in $\Omega_{\rho}$.
+
+
+\subsection{Feasibility in probability}
+Due to the presence of the unbounded disturbance, it is no longer guaranteed that there exists recursively feasible solutions for the optimization problem of Eq.~\ref{eq:SLEMPC}. Therefore, Theorem~\ref{thm5} below provides the probability that the SLEMPC of Eq.~\ref{eq:SLEMPC} is solved with recursive feasibility. 
+\begin{thm}\label{thm5}
+	Consider the system of Eq.~\ref{eq:nonlin_sys} under the SLEMPC of Eq.~\ref{eq:SLEMPC} applied in a sample-and-hold implementation (i.e., $u(t)=u(i\Delta)$, $\forall ~i \Delta \leq t < (i+1) \Delta$, $i=0,1,2,...$). Then, if $x(0) \in \Omega_{\rho}$, the probability of the event $A_F$ that the SLEMPC of Eq.~\ref{eq:SLEMPC} is solved with satisfaction of recursive feasibility over the prediction horizon $[0,\tau_{N})$ is given as follows.
+	\begin{equation}
+	\mathbf{P}(A_F) \geq (1- \lambda)^{\tau_{N}} \prod \limits_{i=0,1,...,\tau_{N}-1} (1-\beta_i)
+	\end{equation}
+%	where $\beta_i$ is given in Eq.~\ref{eq:betai}
+\end{thm}
+
+\hspace{0.5cm}
+
+\begin{proof}
+To calculate the probability of $A_F$, we first show $\mathbf{P}(A_F~|~A_S)=1$, where the probability of $A_S$ was given in Remark~\ref{rmk2}. Since it is shown that $\Omega_{\rho} \subset \phi_n$ in the section of stabilizability assumptions, it follows that $\forall x \in \Omega_{\rho}$, $\inf_{ u \in U } \dot{V} \leq 0$ for the nominal system of Eq.~\ref{eq:nonlin_sys} with $w(t) \equiv 0$. Therefore, assuming $x(t_k) \in \Omega_{\rho_e}^\text{o}$, it is trivial to show that both the input constraint of Eq.~\ref{eq:SLEMPC:input} and the constraint of Eq.~\ref{eq:SLEMPC:mode1} are met because there always exists a solution of the closed-loop optimization problem of Eq.~\ref{eq:SLEMPC} $u(t)$ that satisfies $V(x(t_k+\Delta)) \leq V(x(t_k) < \rho_e$ if $x(t_k) \in \Omega_{\rho_e}^\text{o} \subset \Omega_{\rho}$. Additionally, if  $x(t_k) \in \Omega_{\rho} \backslash \Omega_{\rho_e}^\text{o}$, the existence of a solution $u(t)$ under the SLEMPC of Eq.~\ref{eq:SLEMPC} (e.g. the stochastic Lyapunov-based controller $\Phi_s(x)$) that satisfies the constraints of Eqs.~\ref{eq:SLEMPC:input} and~\ref{eq:SLEMPC:mode2} is also guaranteed due to the fact that $\Omega_{\rho} \subset \phi_d$. Therefore, as long as $x(t) \in \Omega_{\rho},~\forall t \in [0,\tau_{N})$, the optimization problem of Eq.~\ref{eq:SLEMPC} can be solved recursively with satisfying all the constraints, which implies $\mathbf{P}(A_F~|~A_S)=1$. Combined with Eq.~\ref{recursive}, $\mathbf{P}(A_F)$ is obtained via Bayes' formula.%  equivalent to the probability that the states of the closed-loop system of Eq.~\ref{eq:nonlin_sys} remain inside $\Omega_{\rho}$, i.e., Eq.~\ref{recursive}. 
+\end{proof}
+
+ %2 is an invariant set for the nominal system of Eq.~\ref{eq:nonlin_sys} with $w(t) \equiv 0$, it follows that there always exists  Since the constraint of Eq.~\ref{eq:SLEMPC:mode1} is satisfied for all $x(0) \in \Omega_{\rho_e}^\text{o}$  insdie $\phi_d$ and the invariant set inside $\phi_n$, it is guaranteed that under the Lyapunov-based controller, $\mathcal{L}V < 0$ is satisfied, and hence $\dot{V} <0$ also holds due to the fact that $\dot{V} = L_fV(x)+L_gV(x)u(t) < \mathcal{L}V $. Therefore, if $x(0) \in \Omega_{\rho_e}^\text{o}$, it is trivial to show that the Lyapunov-based controller is always a feasible solution that satisfies the constraint of Eq.~\ref{eq:SLEMPC:mode1}. Similarly, if $x(0) \in \Omega_{\rho} \backslash \Omega_{\rho_e}$, the constraint of Eq.~\ref{eq:SLEMPC:mode2} is met by simply taking $u(t)=\Phi_s(x(0))$. 
+
+
+\section{Application to a Chemical Process Example}
+In this section, a chemical process example is used to illustrate the application of the proposed SLEMPC. Specifically, a non-isothermal continuous stirred tank reactor (CSTR) where an irreversible second-order exothermic reaction takes place is considered. In the reactor, the reactant $A$ is converted to the product $B$ via the chemical reaction $A \rightarrow B$. The CSTR is coated with a heating jacket that supplies or removes heat from the reactor. Based on material and energy balances, the CSTR dynamic model is of the following form:
+\begin{subequations}
+	\label{eq:CSTR:ODEs}
+	\begin{align}
+	{dC_{A}}  =& \dfrac{F}{V}(C_{A0}-C_{A}){dt}-k_0e^{-E/RT}C_{A}^2{dt}\nonumber\\
+	&+\sigma_1 (C_A-C_{As})dw_1(t) \label{eq:CSTR:ODEs a} \\[1ex]
+	{dT}  =& \dfrac{F}{V}(T_{0}-T){dt} - \dfrac{\Delta H k_0}{\rho C_p} e^{-E/RT}C_{A}^2{dt}\nonumber\\
+	&+\dfrac{Q}{\rho C_pV}{dt} +\sigma_2(T-T_s) dw_2(t) \label{eq:CSTR:ODEs c}
+	\end{align}
+\end{subequations}
+where $C_{A}$ is the concentration of reactant $A$ in the reactor, $V$ is the volume of the reacting liquid in the reactor, $T$ is the temperature of the reactor and $Q$ denotes the heat input rate. The concentration of reactant $A$ in the feed is $C_{A0}$. The feed temperature and volumetric flow rate are $T_0$ and $F$, respectively. The liquid has a constant density of $\rho$ and a heat capacity of $C_p$. $k_0$, $E$ and $\Delta H$ are reaction pre-exponential factor, activation energy and the enthalpy of the reaction, respectively. Process parameter values are listed in Table~\ref{tbl:ecosysid:parameters}. 
+
+\begin{table}[h]
+	\centering
+	\caption{Parameter values of the CSTR.}
+	\label{tbl:ecosysid:parameters}
+	%	
+	%	\medskip
+	\begin{tabular}{ll}
+		\toprule
+		$T_{0}=300 ~K$ 						& $F=5 ~m^3/hr$ 						\\[1ex]
+		$V=1 ~m^3$ 						& $E=5\times 10^4 ~kJ/kmol$  			\\[1ex]
+		$k_0=8.46\times 10^6 ~m^3/kmol~hr$ 	& $\Delta H= -1.15\times 10^4 ~kJ/kmol$ \\[1ex]
+		$C_p=0.231 ~kJ/kg~K$ 				& $R=8.314 ~kJ/kmol~K$ 					\\[1ex]
+		$\rho=1000 ~kg/m^3$            &$C_{A0_s}=4 ~kmol/m^3$   \\[1ex] 
+		$Q_s=0.0 ~kJ/hr$            & $C_{A_s}=1.22 ~kmol/m^3$   \\[1ex]
+		$T_s=438 ~K$\\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+The CSTR is initially operated at the steady-state $x_s=(C_{As}, ~T_s) = (1.22 ~kmol/m^3, ~438 ~K)$, and $u_s=(C_{A0_s} ~ Q_s)=(4 ~kmol/m^3, ~0 ~kJ/hr)$. The manipulated inputs are the inlet concentration of species $A$ and the heat input rate, which are represented by the deviation variables $\Delta C_{A0} = C_{A0}-C_{A0_s}$, $\Delta Q= Q- Q_s$, respectively. The manipulated inputs are bounded as follows: $\vert \Delta C_{A0} \vert \leq 3.5~ kmol/m^3$ and $\vert \Delta Q \vert \leq 5 \times 10^5~ kJ/hr$. Therefore, the states and the inputs in deviation variable form of the closed-loop system are $x'=[C_A- C_{As} ~T-T_s]$ and $u'=[\Delta C_{A0} ~ \Delta Q]$, respectively, such that the equilibrium point of the system is at the origin of the state-space, (i.e., $(x_s^*, u_s^*)=(0,0)$). The disturbance terms $dw_1$ and $dw_2$ in Eq.~\ref{eq:CSTR:ODEs} are independent standard Gaussian white noise with the standard deviations $\sigma_1= 2.5 \times 10^{-3}~ kmol/m^3$ and $\sigma_2=0.15 ~ K$, respectively. It is noted that the disturbance terms of Eq.~\ref{eq:CSTR:ODEs} vanish at $t_0=0$ due to the assumption that the system is operating at the steady-state at the initial time. Also, the disturbances become larger as the closed-loop states of Eq.~\ref{eq:CSTR:ODEs} deviate from the steady-state (normal operating conditions), which is consistent with the fact that it is more likely to introduce the noise into the system under the abnormal operating conditions.
+
+%is the bounded disturbance vector (Gaussian white noise with variance $\sigma_1= 0.1~ kmol/m^3$, $\sigma_2=2~ K$) with $\vert w_1 \vert \leq 0.1~kmol/m^3$, and $\vert w_2 \vert \leq 2~K$. $f'=[f_1 ~f_2]$, $g_i'=[g_{i1} ~g_{i2}]$, $h_i'=[h_{i1} ~h_{i2}]$($i=1,2$) are vector functions.
+The control objective of the SLEMPC of Eq.~\ref{eq:SLEMPC} is to maximize the economic cost of the CSTR
+process of Eq.~\ref{eq:CSTR:ODEs} while keeping the closed-loop state trajectories
+in the stability region $\Omega_{\rho}$. Thus, the objective function of Eq.~\ref{eq:SLEMPC:cost} that is maximized is the production rate of $B$ as follows:
+\begin{equation}\label{obj_func}
+L(\tilde{x},u)=  k_0 e^{-E/RT}C_{A}^2
+\end{equation}
+
+
+The Lyapunov function is designed using the standard quadratic form of $V(x)=x^TPx$, where the following positive definite $P$ matrix is chosen to characterize the NCR $\phi_d$ for the stochastic system of Eq.\ref{eq:CSTR:ODEs}:
+\begin{equation}
+P = \left[\begin{array}{cc}
+1060 & 22 \\
+22   & 0.52
+\end{array}\right]
+\end{equation}
+
+The stability region $\Omega_{\rho}$ is chosen as the largest level set in $\phi_d$, which is estimated to be $\rho=368$. Additionally, the Euler method with an integration time step of $h_c = 10^{-4} ~hr$ was applied to numerically simulate the dynamic model of Eq.~\ref{eq:CSTR:ODEs}. The nonlinear optimization problem of the SLEMPC of Eq.~\ref{eq:SLEMPC} is solved using the IPOPT software package \cite{wachter2006implementation} with the sampling time $\Delta=10^{-2}~hr$.
+
+We first demonstrate the theoretically derived probability bounds of Eq.~\ref{recursive} in Theorem~\ref{thm4} for different choices of $\rho_{e}$ by using the probabilities obtained via 500 simulation runs. Let $A_V$ denotes the event that the maximum value of $V(x)$ in each realization is less than $\rho$ with the operating time $t_s=1~hr$ and the initial condition $x'=[0 ~~0]$. The results are reported in Table~\ref{table2}. Also, the plots of the maximum value of $V(x)$ in each realization with respect to the number of simulation runs are shown in Fig.~\ref{fig:99} and Fig.~\ref{fig:87} for $\rho_{e}=0.99 \rho$ and $\rho_{e}=0.87 \rho$, respectively.
+
+% and Fig.~\ref{linear}
+
+\begin{table}[h]
+	\centering
+	\caption{Experimental probability for different values of $\rho_e$.}
+	\label{table2}
+	%	
+	%	\medskip 
+	%$\mathbf{P}(\sup \limits_{t \in [0, t_s]}\{V(x(t)) < \rho \}) $ 	
+	\begin{tabular}{ll}
+		\toprule
+		${\rho_{e}} / {\rho}$ 						& $  \quad   \quad   \quad  \quad \mathbf{P}(A_V) $ 				\\[1ex]
+		\toprule
+		$0.99$ 						& $ \quad   \quad   \quad  \quad 48.6 \%$  			\\[1ex]
+		$0.95$ 	& $ \quad   \quad   \quad  \quad67.2\%$ \\[1ex]
+		$0.92$ 				& $\quad   \quad   \quad  \quad77.8\%$ 					\\[1ex]
+		$0.90$            &$\quad   \quad   \quad  \quad87.5\%$   \\[1ex] 
+		$0.87$            & $\quad   \quad   \quad  \quad97.2\%$   \\[1ex]
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+
+
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[trim={2.5cm 2cm 3cm 0cm},width=1\columnwidth]{fig/99}
+	\vspace{-8pt}
+	\caption{The maximum value of ${V(x(t))}$ in each realization originating from (0, 0) of 500 runs of the simulation, in which $\rho=368$ and $\rho_{e}=364.3$.}
+	\label{fig:99}
+	\vspace{-6pt}
+\end{figure}
+
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[trim={2.5cm 2cm 3cm 0cm},width=1\columnwidth]{fig/87}
+	\vspace{-8pt}
+	\caption{The maximum value of ${V(x(t))}$ in each realization originating from (0, 0) of 500 runs of the simulation, in which $\rho=368$ and $\rho_{e}=320.2$.}
+	\label{fig:87}
+	\vspace{-6pt}
+\end{figure}
+
+
+
+From Table~\ref{table2}, it is observed that $\mathbf{P}(A_V)$ increases in an approximately linear fashion as $\rho_{e}$ decreases. From Figs.~\ref{fig:99} and~\ref{fig:87}, it is observed that the probability that the states of the closed-loop system of Eq.~\ref{eq:CSTR:ODEs} remain in $\Omega_{\rho}$ reaches $97.2 \%$ when $\rho_{e}$ decreases to $\rho_{e}=320$. In this case, the closed-loop system under the SLEMPC of Eq.~\ref{eq:SLEMPC} can be regarded as a stable system with high probability.
+
+%$\vert dw_1 \vert \leq
+Since the disturbances are of standard normal distributions, let the disturbances be bounded by $\theta_1=3 \sigma_1$ and $\theta_2=3 \sigma_2$, respectively, and it implies that approximately $99.7 \%$ of disturbances will fall within three-sigma intervals. Similarly, using the Lyapunov-based control law $\Phi_n(x)$ that satisfies $\dot{V}=L_fV+L_gV \Phi_n(x) +|L_hV \theta| \leq -\alpha V \leq 0$ for the system of Eq.~\ref{eq:CSTR:ODEs}, a stability region $\Omega_\rho'$ can be found inside the NCR $\phi_d'$, which is characterized accounting for the above bounded disturbances: $\phi_d'=\{ x \in \mathbf{R}^n ~|~ \dot{V}=L_fV+L_gVu+|L_hV \theta|  \leq -\alpha V, u=\Phi_n(x)  \in U  \}$. Figs.~\ref{fig:LV} and~\ref{fig:dV} below display the level sets $\Omega_{\rho}$ and $\Omega_\rho'$ inside the NCR $\phi_d$ and $\phi_d'$, respectively.
+
+%(i.e., $h(x)'\frac{\partial^2 V}{\partial x^2}h(x)=0$)
+
+
+
+
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=1\columnwidth]{fig/LV}
+	\vspace{-8pt}
+	\caption{The stability region for the closed-loop CSTR under the stochastic Lyapunov-based controller $\Phi_s(x)$.}
+	\label{fig:LV}
+	\vspace{-6pt}
+\end{figure}
+
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[width=1\columnwidth]{fig/dV}
+	\vspace{-8pt}
+	\caption{The stability region for the closed-loop CSTR under the Lyapunov-based controller $\Phi_n(x)$.}
+	\label{fig:dV}
+	\vspace{-6pt}
+\end{figure}
+
+From the above figures, it is shown that the level set $\Omega_{\rho}$ with $\rho=368$ determined under the stochastic Lyapunov-based controller $\Phi_s(x)$ is larger than $\Omega_\rho'$ with $\rho'=45$ determined under the Lyapunov-based controller $\Phi_n(x)$. %Since $\Omega_{\rho}'$ is an invariant set inside $\phi_d'$ in the presence of the disturbance within three-sigma intervals, it is guaranteed that the closed-loop trajectory of the system of Eq.~\ref{eq:CSTR:ODEs} is bounded in $\Omega_\rho'$, where $\Omega_{\rho_e}'$ is defined as below:
+%\begin{equation}
+%\rho' = \max \limits_{\Delta t \in [0,\Delta)}\{V(x(t+\Delta t)) ~\vert~ x(t) \in \Omega_{\rho_{e}}',~u \in U\}.
+%\end{equation}
+ %region $\phi_d$ under the stochastic Lyapunov-based controller is larger than $\phi_d'$ under the original Lyapunov-based controller, leading to the enlargement of the largest level set from $\rho'=45$ in $\phi_d'$ to $\rho=368$ in $\phi_d$. 
+ Let $\Omega_{\rho_e}'=40$, such that for any $x(0)$ originating on the boundary of $\Omega_{\rho_e}'$, the closed-loop trajectory of the system of Eq.~\ref{eq:CSTR:ODEs} does not reach the boundary of $\Omega_{\rho}'$ within one sampling period. Therefore, it is guaranteed that the state of the closed-loop system of Eq.~\ref{eq:CSTR:ODEs} is bounded in $\Omega_{\rho}'$ under the standard LEMPC of Eq.~\ref{eq:nLEMPC}.%the following form:
+ %with the following constraints replacing the constraints of  Eqs.~\ref{eq:SLEMPC:mode1} and~\ref{eq:SLEMPC:mode2}, it is guaranteed that the state of the closed-loop system of Eq.~\ref{eq:CSTR:ODEs} is bounded in $\Omega_{\rho}'$, which is shown in Fig.~\ref{fig:robust}.
+ 
+ 
+ %%IMPORTANT
+% \begin{subequations}
+% 	\label{eq:nLEMPC}
+% 	\begin{align}
+% 	&\underset{u \in S(\Delta)}{\text{max}}  \int_{0}^{\tau_{N} \Delta} L_e( \tilde{x}(t), u(t)) \, dt \label{eq:nLEMPC:cost} \\
+% 	\text{s.t.} & ~\dot{\tilde{x}}(t) = f(\tilde{x}(t), u(t),0) \label{eq:nLEMPC:model} \\
+% 	& ~ \tilde{x}(t_k) = x(t_k) \label{eq:nLEMPC:state} \\
+% 	&~u(t) \in U, \quad \forall \, t \in [0, \tau_{N} \Delta) \label{eq:nLEMPC:input} \\
+% 	&~ V(\tilde{x}(t)) < \rho_e',~ \mbox{if}~V(x(t_k)) < \rho_e', \forall t \in [0, \tau_{N} \Delta)  \label{eq:nLEMPC:mode1}\\
+% 	&~\dot{V}(x(t_k),u) \leq \dot{V}(x(t_k),\Phi_n(x(t_k)))\nonumber\\
+% &	~ \mbox{if}~ \rho_e' \leq V(x(t_k)) \leq  \rho', \quad \forall t \in [0, \tau_{N} \Delta)\label{eq:nLEMPC:mode2}
+% 	\end{align}
+% \end{subequations}
+
+
+
+
+
+% \begin{subequations}
+% 	\begin{align}
+% 	&~ V(\tilde{x}(t)) < \rho_e',~ \mbox{if}~V(x(t_k)) < \rho_e', \forall t \in [0, \tau_{N} \Delta) \label{eq:mode1}\\
+% 	&~\dot{V}(x(t_k),u) \leq \dot{V}(x(t_k),\Phi_n(x(t_k)))\nonumber\\
+% &	~ \mbox{if}~ \rho_e' \leq V(x(t_k)) \leq  \rho', \quad \forall t \in [0, \tau_{N} \Delta) \label{eq:mode2}
+% 	\end{align}
+% \end{subequations}
+ % $\Omega_{\rho_e'}$ replacing $\Omega_{\rho_e}$ and the constraint $\dot{V}(x(t_k),u)=L_fV+L_gV u +|L_hV \theta| \leq \dot{V}(x(t_k),\Phi_n(x))$ replacing the constraint of Eq.~\ref{eq:SLEMPC:mode2}, 
+  \begin{figure}[!htbp]
+  	\centering
+  	\includegraphics[trim={3cm 1cm 3cm 1cm},width=1\columnwidth]{fig/robust}
+  	\vspace{-8pt}
+  	\caption{Evolution of the Lyapunov function value of the state of the closed-loop system of Eq.~\ref{eq:CSTR:ODEs} under the LEMPC of Eq.~\ref{eq:nLEMPC}.}
+  \label{fig:robust}
+  	\vspace{-6pt}
+  \end{figure}
+
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[trim={3cm 1cm 3cm 1cm},width=1\columnwidth]{fig/u1}
+	\vspace{-8pt}
+	\caption{Manipulated input profile ($\Delta C_{A0}$) under the LEMPC of Eq.~\ref{eq:nLEMPC} for the initial condition (0, 0) and the stability region $\Omega_{\rho}',~\rho'=45$.}
+	\label{fig:u1}
+	\vspace{-6pt}
+\end{figure}
+
+\begin{figure}[!htbp]
+	\centering
+	\includegraphics[trim={3cm 1cm 3cm 1cm},width=1\columnwidth]{fig/u2}
+	\vspace{-8pt}
+	\caption{Manipulated input profile ($\Delta Q$) under the LEMPC of Eq.~\ref{eq:nLEMPC} for the initial condition (0, 0) and the stability region $\Omega_{\rho}',~\rho'=45$.}
+	\label{fig:u2}
+	\vspace{-6pt}
+\end{figure}
+  
+ It is seen in Fig.~\ref{fig:robust} that the closed-loop trajectory is bounded in $\Omega_{\rho}'$ under the standard LEMPC of Eq.~\ref{eq:nLEMPC}. The corresponding input profiles are also shown in Fig~\ref{fig:u1} and Fig~\ref{fig:u2}, in which it is seen that the control actions satisfy the input constraints as well. As a result, the total economic costs $L_E=\int_{0}^{t_s} L_e(x, u) $ under the SLEMPC of Eq.~\ref{eq:SLEMPC} with $\Omega_{\rho}$ and the standard LEMPC with $\Omega_\rho'$ are calculated via the simulations with the same initial condition $x'=[0 ~0]$. It is shown in Fig.~\ref{fig:LE} that the total economic cost within $t_s=1~hr$ is $28.3$ under the SLEMPC, which has an improvement of $68 \%$ compared to $16.8$ under the standard LEMPC, and $13.4$ under the steady-state operation. Therefore, under the SLEMPC of Eq.~\ref{eq:SLEMPC}, the stability region $\Omega_{\rho}$ that accounts for the PDFs of disturbance achieves higher economic costs for the closed-loop system of Eq.~\ref{eq:CSTR:ODEs} than the standard LEMPC with a conservative stability region $\Omega_{\rho}'$. In addition, it is shown through the Monte Carlo simulations that by choosing $\rho_{e}=320.2$, the closed-loop system of Eq.~\ref{eq:CSTR:ODEs} can be stabilized under the SLEMPC of Eq.~\ref{eq:SLEMPC} with the probability of $97.2 \%$, which is comparable to $99.7 \%$ of the stability region $\Omega_{\rho}'$ that is robust to all the disturbances near certainty. 
+ \begin{figure}[!htbp]
+	\centering
+	\includegraphics[trim={3cm 1cm 3cm 1cm},width=1\columnwidth]{fig/LE}
+	\vspace{-8pt}
+	\caption{Accumulation of the economic cost $L_e$ of the closed-loop system of Eq.~\ref{eq:CSTR:ODEs} under the SLEMPC (solid line), the standard LEMPC (dash-dotted line), and the steady state operation (dashed line).}
+	\label{fig:LE}
+	\vspace{-6pt}
+\end{figure}
+
+
+
+
+
+
+
+\section{Conclusion}
+In this work, the Lyapunov-based EMPC was designed for the stochastic nonlinear systems with unbounded disturbance. We first characterized a null controllable region from where the stability can be probabilistically obtained. We then presented the optimization-based control strategy of the SLEMPC and the probabilities of stability of the closed-loop system under the SLEMPC. The application of the proposed SLEMPC method is demonstrated through a chemical process example, from which it is shown that the system operating in the stability region in probability outperformed the one operating in the robust but conservative stability region.
+
+
+
+
+\section{Acknowledgments}
+Financial support from the National Science Foundation and the Department of Energy is gratefully acknowledged.
+
+
+
+%\newpage
+%\bibliography{citation_tout1}
+\bibliography{ref,nsf14_refs,citationCPC,citation1,citation,alarmcitation,SLEMPC}
+
+%\begin{thebibliography}{99}
+%	\bibitem{lee2011model}
+%	J.~H. Lee, ``Model predictive control: Review of the three decades of
+%	development,'' \emph{International Journal of Control, Automation and
+%		Systems}, vol.~9, no.~3, pp. 415--424, 2011.
+%	
+%	\bibitem{muller2012model}
+%	M.~A. M{\"u}ller, P.~Martius, and F.~Allg{\"o}wer, ``Model predictive control
+%	of switched nonlinear systems under average dwell-time,'' \emph{Journal of
+%		Process Control}, vol.~22, no.~9, pp. 1702--1710, 2012.
+%	
+%	\bibitem{christofides2013distributed}
+%	P.~D. Christofides, R.~Scattolini, D.~M. de~la Pena, and J.~Liu, ``Distributed
+%	model predictive control: A tutorial review and future research directions,''
+%	\emph{Computers \& Chemical Engineering}, vol.~51, no.~4, pp. 21--41, 2013.
+%	
+%	\bibitem{diangelakis2015decentralized}
+%	N.~A. Diangelakis, S.~Avraamidou, and E.~N. Pistikopoulos, ``Decentralized
+%	multiparametric model predictive control for domestic combined heat and power
+%	systems,'' \emph{Industrial \& Engineering Chemistry Research}, vol.~55,
+%	no.~12, pp. 3313--3326, 2015.
+%	
+%	\bibitem{charitopoulos2016explicit}
+%	V.~M. Charitopoulos and V.~Dua, ``Explicit model predictive control of hybrid
+%	systems and multiparametric mixed integer polynomial programming,''
+%	\emph{AIChE Journal}, vol.~62, no.~9, pp. 3441--3460, 2016.
+%	
+%	\bibitem{heirung2017dual}
+%	T.~A.~N. Heirung, B.~E. Ydstie, and B.~Foss, ``Dual adaptive model predictive
+%	control,'' \emph{Automatica}, vol.~80, no.~6, pp. 340--348, 2017.
+%	
+%	\bibitem{hashimoto2017self}
+%	K.~Hashimoto, S.~Adachi, and D.~V. Dimarogonas, ``Self-triggered model
+%	predictive control for nonlinear input-affine dynamical systems via adaptive
+%	control samples selection,'' \emph{IEEE Transactions on Automatic Control},
+%	vol.~62, no.~1, pp. 177--189, 2017.
+%	
+%	\bibitem{manenti2011considerations}
+%	F.~Manenti, ``Considerations on nonlinear model predictive control
+%	techniques,'' \emph{Computers \& Chemical Engineering}, vol.~35, no.~11, pp.
+%	2491--2509, 2011.
+%	
+%	\bibitem{kapernick2016nonlinear}
+%	B.~K{\"a}pernick and K.~Graichen, ``Nonlinear model predictive control based on
+%	constraint transformation,'' \emph{Optimal Control Applications and Methods},
+%	vol.~37, no.~4, pp. 807--828, 2016.
+%	
+%	\bibitem{alamir2017contraction}
+%	M.~Alamir, ``Contraction-based nonlinear model predictive control formulation
+%	without stability-related terminal constraints,'' \emph{Automatica}, vol.~75,
+%	pp. 288--292, 2017.
+%	
+%	\bibitem{mesbah2016stochastic}
+%	A.~Mesbah, ``Stochastic model predictive control: An overview and perspectives
+%	for future research,'' \emph{IEEE Control Systems}, vol.~36, no.~6, pp.
+%	30--44, 2016.
+%	
+%	\bibitem{bemporad1999robust}
+%	A.~Bemporad and M.~Morari, ``Robust model predictive control: A survey,''
+%	\emph{Robustness in identification and control}, vol. 245, no.~9, pp.
+%	207--226, 1999.
+%	
+%	\bibitem{rubagotti2011robust}
+%	M.~Rubagotti, D.~M. Raimondo, A.~Ferrara, and L.~Magni, ``Robust model
+%	predictive control with integral sliding mode in continuous-time sampled-data
+%	nonlinear systems,'' \emph{IEEE Transactions on Automatic Control}, vol.~56,
+%	no.~3, pp. 556--570, 2011.
+%	
+%
+%	
+%	\bibitem{yan2014robust}
+%	Z.~Yan and J.~Wang, ``Robust model predictive control of nonlinear systems with
+%	unmodeled dynamics and bounded uncertainties based on neural networks,''
+%	\emph{IEEE Transactions on Neural Networks and Learning Systems}, vol.~25,
+%	no.~3, pp. 457--469, 2014.
+%	
+%	\bibitem{lorenzen2017constraint}
+%	M.~Lorenzen, F.~Dabbene, R.~Tempo, and F.~Allg{\"o}wer, ``Constraint-tightening
+%	and stability in stochastic model predictive control,'' \emph{IEEE
+%		Transactions on Automatic Control}, vol.~62, no.~7, pp. 3165--3177, 2017.
+%	
+%	\bibitem{cannon2009probabilistic}
+%	M.~Cannon, B.~Kouvaritakis, and X.~Wu, ``Probabilistic constrained mpc for
+%	multiplicative and additive stochastic uncertainty,'' \emph{IEEE Transactions
+%		on Automatic Control}, vol.~54, no.~7, pp. 1626--1632, 2009.
+%	
+%	\bibitem{cannon2011stochastic}
+%	M.~Cannon, B.~Kouvaritakis, S.~V. Rakovic, and Q.~Cheng, ``Stochastic tubes in
+%	model predictive control with probabilistic constraints,'' \emph{IEEE
+%		Transactions on Automatic Control}, vol.~56, no.~1, pp. 194--200, 2011.
+%	
+%
+%	
+%	\bibitem{farina2015approach}
+%	M.~Farina, L.~Giulioni, L.~Magni, and R.~Scattolini, ``An approach to
+%	output-feedback mpc of stochastic linear discrete-time systems,''
+%	\emph{Automatica}, vol.~55, no.~5, pp. 140--149, 2015.
+%	
+%	\bibitem{bayer2016robust}
+%	F.~A. Bayer, M.~Lorenzen, M.~A. M{\"u}ller, and F.~Allg{\"o}wer, ``Robust
+%	economic model predictive control using stochastic information,''
+%	\emph{Automatica}, vol.~74, no.~12, pp. 151--161, 2016.
+%	
+%	\bibitem{paulson2017stochastic}
+%	J.~A. Paulson, E.~A. Buehler, R.~D. Braatz, and A.~Mesbah, ``Stochastic model
+%	predictive control with joint chance constraints,'' \emph{International
+%		Journal of Control}, pp. 1--14, 2017.
+%	
+%	\bibitem{ellis2014tutorial}
+%	M.~Ellis, H.~Durand, and P.~D. Christofides, ``A tutorial review of economic
+%	model predictive control methods,'' \emph{Journal of Process Control},
+%	vol.~24, no.~8, pp. 1156--1178, 2014.
+%	
+%	\bibitem{muller2015necessity}
+%	M.~A. M{\"u}ller, D.~Angeli, and F.~Allg{\"o}wer, ``On necessity and robustness
+%	of dissipativity in economic model predictive control,'' \emph{IEEE
+%		Transactions on Automatic Control}, vol.~60, no.~6, pp. 1671--1676, 2015.
+%	
+%
+%	
+%	\bibitem{muller2016economic}
+%	M.~A. M{\"u}ller and L.~Gr{\"u}ne, ``Economic model predictive control without
+%	terminal constraints for optimal periodic behavior,'' \emph{Automatica},
+%	vol.~70, no.~8, pp. 128--139, 2016.
+%	
+%	\bibitem{durand2016economic}
+%	H.~Durand, M.~Ellis, and P.~D. Christofides, ``Economic model predictive
+%	control designs for input rate-of-change constraint handling and guaranteed
+%	economic performance,'' \emph{Computers \& Chemical Engineering}, vol.~92,
+%	no.~9, pp. 18--36, 2016.
+%	
+%
+%
+%\end{thebibliography}
+
+\end{document}
